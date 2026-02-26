@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jordan Saker | Business</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #555;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1a1a1a;
+        }
+
+        .portfolio {
+            margin-bottom: 3rem;
+        }
+
+        .feature-banner {
+            display: block;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-banner img {
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+        }
+
+        .tile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .tile {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .tile img {
+            width: 100%;
+            display: block;
+        }
+
+        .tile-content {
+            padding: 1.25rem;
+        }
+
+        .tile-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .tile-content p {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .connect {
+            margin-bottom: 3rem;
+        }
+
+        .links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .links a {
+            color: #10B981;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .links a:hover {
+            color: #059669;
+        }
+
+        footer {
+            background: #e9ecef;
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 0.875rem;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            header {
+                padding: 2rem 1.5rem;
+            }
+
+            .tile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Jordan Saker</h1>
+        <p class="tagline">Software Development</p>
+    </header>
+
+    <div class="container">
+        <section class="portfolio">
+            <h2 class="section-title">Portfolio</h2>
+            <a href="https://goalquest.mobi" target="_blank" rel="noopener noreferrer" class="feature-banner">
+                <img src="images/feature-graphic.png" alt="GoalQuest feature graphic">
+            </a>
+            <div class="tile-grid">
+                <a href="https://goalquest.mobi" target="_blank" rel="noopener noreferrer" class="tile">
+                    <img src="images/parent-dashboard.png" alt="GoalQuest parent dashboard screenshot">
+                    <div class="tile-content">
+                        <h3>Parent Dashboard</h3>
+                        <p>Manage goals, track progress, and reward your children from a single view.</p>
+                    </div>
+                </a>
+                <a href="https://goalquest.mobi" target="_blank" rel="noopener noreferrer" class="tile">
+                    <img src="images/gift-cards.png" alt="GoalQuest star rewards and gift cards screenshot">
+                    <div class="tile-content">
+                        <h3>Star Rewards</h3>
+                        <p>Kids earn stars for completing goals and redeem them for gift cards and rewards.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="connect">
+            <h2 class="section-title">Connect</h2>
+            <div class="links">
+                <a href="https://github.com/jordansaker" target="_blank" rel="noopener noreferrer">GitHub</a>
+<a href="mailto:jordan@jordansakerdev.com">Email</a>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>Jordan Saker</strong></p>
+        <p>ABN: 95 658 646 131</p>
+        <p>Mareeba, QLD, Australia</p>
+        <p>&copy; 2026 Jordan Saker</p>
+    </footer>
+</body>
+</html>
