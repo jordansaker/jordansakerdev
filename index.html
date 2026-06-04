@@ -150,6 +150,7 @@
   .svc p{color:var(--muted);font-size:.97rem}
 
   /* ---------- WORK ---------- */
+  .project+.project{margin-top:40px}
   .project{
     background:linear-gradient(135deg,var(--surface),var(--bg-2));
     border:1px solid var(--line);border-radius:24px;overflow:hidden;
@@ -291,6 +292,31 @@
 <section id="work">
   <div class="wrap">
     <div class="sec-head reveal"><span class="num">02</span><h2>Selected work</h2></div>
+    <div class="project reveal">
+      <div class="project-info">
+        <span class="pill">SaaS · Web</span>
+        <h3>Hecta</h3>
+        <p>A direct-to-consumer platform helping Australian farms sell online — with storefronts, subscriptions and operational tools all in one place.</p>
+        <div class="feat-list">
+          <div class="f">
+            <span class="fi">⌂</span>
+            <div><h4>Farm storefront</h4><p>Branded online store with variable-weight pricing, order cycles and pickup locations.</p></div>
+          </div>
+          <div class="f">
+            <span class="fi">↻</span>
+            <div><h4>Subscriptions</h4><p>CSA box management with customer self-service, skipping and automatic billing.</p></div>
+          </div>
+        </div>
+        <a href="https://hecta.com.au" class="project-link">
+          Visit hecta.com.au
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
+      <div class="project-visual">
+        <img src="images/hecta-dashboard.webp" alt="Hecta dashboard"
+             onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=visual-fallback>Hecta preview</div>')">
+      </div>
+    </div>
     <div class="project reveal">
       <div class="project-info">
         <span class="pill">Live product · Mobile</span>
