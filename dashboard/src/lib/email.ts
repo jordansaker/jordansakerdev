@@ -18,10 +18,6 @@ function fromAddress() {
   return process.env.RESEND_FROM || "invoices@jordansakerdev.com";
 }
 
-function appUrl() {
-  return process.env.APP_URL?.replace(/\/$/, "") || "http://localhost:3002";
-}
-
 export async function sendInvoiceEmail(
   invoiceId: number,
 ): Promise<{ ok: boolean; error?: string }> {
@@ -81,8 +77,6 @@ export async function sendInvoiceEmail(
       <p style="margin-top: 24px;">Thanks,<br>${escapeHtml(settings.legalName)}<br>
         <a href="mailto:${settings.businessEmail}">${settings.businessEmail}</a>
       </p>
-      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-      <p style="font-size: 12px; color: #888;">View this invoice online: <a href="${appUrl()}/api/invoices/${invoice.id}/pdf">${appUrl()}/api/invoices/${invoice.id}/pdf</a></p>
     </div>
   `;
 

@@ -109,7 +109,6 @@ npx vercel env add ADMIN_PASSWORD production
 npx vercel env add SESSION_SECRET production
 npx vercel env add RESEND_API_KEY production
 npx vercel env add RESEND_FROM production
-npx vercel env add APP_URL production       # https://your-deployment.vercel.app
 npx vercel --prod
 ```
 
