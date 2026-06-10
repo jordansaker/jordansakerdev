@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jordan Saker — Software Development</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E0D0B;
+    --bg-2:#15130F;
+    --surface:#1B1814;
+    --surface-2:#221E19;
+    --line:rgba(237,231,219,0.12);
+    --line-soft:rgba(237,231,219,0.07);
+    --text:#EDE7DB;
+    --muted:#A89C8B;
+    --muted-2:#766C5F;
+    --accent:#E8743B;
+    --accent-soft:rgba(232,116,59,0.14);
+    --accent-2:#7FB2A6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Hanken Grotesk",sans-serif;
+    font-size:17px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* grain overlay */
+  body::after{
+    content:"";
+    position:fixed;inset:0;
+    pointer-events:none;z-index:9999;
+    opacity:0.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection{background:var(--accent);color:#0E0D0B}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 32px}
+
+  .mono{font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 32px;
+    backdrop-filter:blur(10px);
+    background:linear-gradient(to bottom,rgba(14,13,11,0.85),rgba(14,13,11,0));
+  }
+  .brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.01em}
+  .monogram{
+    width:32px;height:32px;border-radius:8px;
+    background:var(--accent);color:#0E0D0B;
+    display:grid;place-items:center;
+    font-family:"Fraunces",serif;font-weight:600;font-size:.95rem;
+    box-shadow:0 4px 18px rgba(232,116,59,.35);
+  }
+  .nav-links{display:flex;gap:30px}
+  .nav-links a{font-size:.9rem;color:var(--muted);transition:color .25s}
+  .nav-links a:hover{color:var(--text)}
+  .nav-cta{
+    border:1px solid var(--line);border-radius:999px;
+    padding:8px 18px;font-size:.85rem;color:var(--text);
+    transition:all .25s;
+  }
+  .nav-cta:hover{background:var(--accent);border-color:var(--accent);color:#0E0D0B}
+  @media(max-width:720px){.nav-links{display:none}}
+
+  /* ---------- HERO ---------- */
+  header{
+    min-height:100vh;display:flex;align-items:center;position:relative;
+    padding:120px 0 80px;
+  }
+  header::before{
+    content:"";position:absolute;top:-10%;right:-10%;
+    width:60vw;height:60vw;max-width:760px;max-height:760px;
+    background:radial-gradient(circle,var(--accent-soft),transparent 65%);
+    pointer-events:none;
+  }
+  .hero-tag{display:flex;align-items:center;gap:12px;margin-bottom:34px;opacity:0;animation:rise .8s .1s forwards}
+  .hero-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 0 4px rgba(127,178,166,.18)}
+  h1{
+    font-family:"Fraunces",serif;
+    font-weight:340;
+    font-size:clamp(3rem,9vw,6.4rem);
+    line-height:0.98;
+    letter-spacing:-0.02em;
+    margin-bottom:30px;
+  }
+  h1 .accent{font-style:italic;color:var(--accent)}
+  h1 .l1{display:block;opacity:0;animation:rise .9s .2s forwards}
+  h1 .l2{display:block;opacity:0;animation:rise .9s .34s forwards}
+  .lede{
+    max-width:540px;font-size:1.18rem;color:var(--muted);
+    margin-bottom:42px;opacity:0;animation:rise .9s .5s forwards;
+  }
+  .lede strong{color:var(--text);font-weight:600}
+  .hero-actions{display:flex;gap:16px;flex-wrap:wrap;opacity:0;animation:rise .9s .64s forwards}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:14px 26px;border-radius:999px;font-weight:600;font-size:.95rem;
+    transition:all .25s;
+  }
+  .btn-primary{background:var(--accent);color:#0E0D0B}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(232,116,59,.32)}
+  .btn-ghost{border:1px solid var(--line);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--text);background:rgba(237,231,219,.04)}
+  .btn svg{width:16px;height:16px}
+
+  .hero-meta{
+    position:absolute;bottom:46px;left:32px;right:32px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;
+    max-width:1100px;margin:0 auto;
+    opacity:0;animation:rise .9s .8s forwards;
+  }
+  .hero-meta .item{display:flex;flex-direction:column;gap:3px}
+  .hero-meta .item span:last-child{color:var(--text);font-size:.92rem;font-family:"JetBrains Mono",monospace}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:110px 0;position:relative}
+  .sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:54px}
+  .sec-head .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--accent)}
+  .sec-head h2{font-family:"Fraunces",serif;font-weight:380;font-size:clamp(1.8rem,4vw,2.7rem);letter-spacing:-.01em}
+
+  /* ---------- SERVICES ---------- */
+  #services{background:var(--bg-2);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  @media(max-width:820px){.svc-grid{grid-template-columns:1fr}}
+  .svc{
+    background:var(--surface);border:1px solid var(--line-soft);border-radius:18px;
+    padding:32px 30px;transition:all .3s;position:relative;overflow:hidden;
+  }
+  .svc:hover{transform:translateY(-4px);border-color:var(--line);background:var(--surface-2)}
+  .svc .ic{
+    width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    display:grid;place-items:center;margin-bottom:22px;
+  }
+  .svc .ic svg{width:22px;height:22px;stroke:var(--accent)}
+  .svc h3{font-family:"Fraunces",serif;font-weight:500;font-size:1.3rem;margin-bottom:10px}
+  .svc p{color:var(--muted);font-size:.97rem}
+
+  /* ---------- WORK ---------- */
+  .project{
+    background:linear-gradient(135deg,var(--surface),var(--bg-2));
+    border:1px solid var(--line);border-radius:24px;overflow:hidden;
+    display:grid;grid-template-columns:1.05fr 0.95fr;
+  }
+  @media(max-width:860px){.project{grid-template-columns:1fr}}
+  .project-info{padding:48px 44px;display:flex;flex-direction:column;justify-content:center}
+  .project-info .pill{
+    align-self:flex-start;background:var(--accent-soft);color:var(--accent);
+    font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;padding:6px 12px;border-radius:999px;margin-bottom:24px;
+  }
+  .project-info h3{font-family:"Fraunces",serif;font-weight:420;font-size:2.4rem;line-height:1;margin-bottom:18px}
+  .project-info p{color:var(--muted);margin-bottom:26px;max-width:42ch}
+  .feat-list{display:flex;flex-direction:column;gap:16px;margin-bottom:32px}
+  .feat-list .f{display:flex;gap:14px;align-items:flex-start}
+  .feat-list .f .fi{
+    flex-shrink:0;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+    display:grid;place-items:center;color:var(--accent);font-size:.9rem;margin-top:2px;
+  }
+  .feat-list .f h4{font-size:1rem;font-weight:600;margin-bottom:2px}
+  .feat-list .f p{font-size:.9rem;margin:0;color:var(--muted)}
+  .project-link{
+    display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
+    font-weight:600;color:var(--accent);transition:gap .25s;
+  }
+  .project-link:hover{gap:15px}
+  .project-visual{
+    position:relative;background:var(--bg);overflow:hidden;
+    display:grid;place-items:center;padding:40px;min-height:360px;
+  }
+  .project-visual::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at 70% 30%,var(--accent-soft),transparent 60%);
+  }
+  .project-visual img{
+    max-width:100%;border-radius:14px;position:relative;z-index:2;
+    box-shadow:0 30px 60px rgba(0,0,0,.5);border:1px solid var(--line);
+  }
+  /* fallback box if image absent */
+  .visual-fallback{
+    position:relative;z-index:2;width:100%;max-width:340px;aspect-ratio:16/9;
+    border-radius:14px;border:1px solid var(--line);
+    background:linear-gradient(135deg,var(--surface-2),var(--surface));
+    display:grid;place-items:center;color:var(--muted-2);
+    font-family:"JetBrains Mono",monospace;font-size:.8rem;
+  }
+
+  /* ---------- APPROACH STRIP ---------- */
+  #approach{background:var(--bg-2);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .approach-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media(max-width:820px){.approach-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.approach-grid{grid-template-columns:1fr}}
+  .stat .big{font-family:"Fraunces",serif;font-weight:380;font-size:2.6rem;color:var(--accent);line-height:1}
+  .stat p{color:var(--muted);font-size:.92rem;margin-top:8px}
+
+  /* ---------- CONTACT ---------- */
+  #contact{text-align:center}
+  #contact h2{font-family:"Fraunces",serif;font-weight:360;font-size:clamp(2.2rem,6vw,4rem);letter-spacing:-.02em;margin-bottom:22px;line-height:1.05}
+  #contact h2 .accent{font-style:italic;color:var(--accent)}
+  #contact .sub{color:var(--muted);max-width:480px;margin:0 auto 40px;font-size:1.1rem}
+  .contact-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line-soft);padding:40px 0}
+  .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  .foot .legal{color:var(--muted-2);font-size:.82rem;font-family:"JetBrains Mono",monospace;line-height:1.7}
+  .foot .social{display:flex;gap:22px}
+  .foot .social a{color:var(--muted);font-size:.9rem;transition:color .25s}
+  .foot .social a:hover{color:var(--accent)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s,transform .8s}
+  .reveal.in{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="brand"><span class="monogram">JS</span> Jordan Saker</a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#work">Work</a>
+    <a href="#approach">Approach</a>
+  </div>
+  <a href="#contact" class="nav-cta">Start a project</a>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="hero-tag">
+      <span class="dot"></span>
+      <span class="mono">Available for new work · Mareeba, QLD</span>
+    </div>
+    <h1>
+      <span class="l1">Software built</span>
+      <span class="l2">to <span class="accent">actually ship.</span></span>
+    </h1>
+    <p class="lede">I'm Jordan — an independent developer building <strong>mobile and web products</strong> for founders and small businesses. From first idea to a live app your customers can use.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn btn-primary">
+        Let's build something
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="#work" class="btn btn-ghost">See the work</a>
+    </div>
+  </div>
+  <div class="hero-meta">
+    <div class="item"><span class="mono">Focus</span><span>Mobile · Web</span></div>
+    <div class="item"><span class="mono">Based</span><span>Far North QLD</span></div>
+    <div class="item"><span class="mono">Engagements</span><span>Remote, Australia-wide</span></div>
+    <div class="item"><span class="mono">Status</span><span>Open · 2026</span></div>
+  </div>
+</header>
+
+<section id="services">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="num">01</span><h2>What I do</h2></div>
+    <div class="svc-grid">
+      <div class="svc reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+        <h3>Mobile apps</h3>
+        <p>Native-quality iOS and Android apps, from concept and prototyping through to store submission and ongoing support.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M2 9h20M8 21h8"/></svg></div>
+        <h3>Web applications</h3>
+        <p>Fast, reliable web apps and dashboards — clean front-ends backed by sensible, maintainable infrastructure.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div>
+        <h3>Product partnership</h3>
+        <p>Have an idea but no technical co-founder? I help shape, scope and build an MVP you can put in front of real users.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="num">02</span><h2>Selected work</h2></div>
+    <div class="project reveal">
+      <div class="project-info">
+        <span class="pill">Live product · Mobile</span>
+        <h3>GoalQuest</h3>
+        <p>A family goal-tracking app that turns chores and habits into a rewarding game for kids — and gives parents a single place to manage it all.</p>
+        <div class="feat-list">
+          <div class="f">
+            <span class="fi">◧</span>
+            <div><h4>Parent dashboard</h4><p>Manage goals, track progress and reward children from a single view.</p></div>
+          </div>
+          <div class="f">
+            <span class="fi">★</span>
+            <div><h4>Star rewards</h4><p>Kids earn stars for completing goals and redeem them for gift cards and rewards.</p></div>
+          </div>
+        </div>
+        <a href="https://goalquest.mobi" class="project-link">
+          Visit goalquest.mobi
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
+      <div class="project-visual">
+        <img src="https://jordansakerdev.com/images/feature-graphic.png" alt="GoalQuest feature graphic"
+             onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=visual-fallback>GoalQuest preview</div>')">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="approach">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="num">03</span><h2>How I work</h2></div>
+    <div class="approach-grid">
+      <div class="stat reveal"><div class="big">1:1</div><p>You talk directly to the person building it — no account managers, no handoffs.</p></div>
+      <div class="stat reveal"><div class="big">Ship</div><p>Small, frequent releases over big-bang launches. You see progress every week.</p></div>
+      <div class="stat reveal"><div class="big">Own</div><p>You keep full ownership of code, accounts and infrastructure. No lock-in.</p></div>
+      <div class="stat reveal"><div class="big">Clear</div><p>Fixed scope, plain-English updates, and honest advice on what's worth building.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="reveal">
+      <h2>Got something <span class="accent">worth building?</span></h2>
+      <p class="sub">Tell me about the product or problem — I'll come back with honest thoughts on how to approach it.</p>
+      <div class="contact-row">
+        <a href="mailto:jordan@jordansakerdev.com" class="btn btn-primary">
+          jordan@jordansakerdev.com
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9 6 9-6M3 7v10a1 1 0 001 1h16a1 1 0 001-1V7"/></svg>
+        </a>
+        <a href="https://github.com/jordansaker" class="btn btn-ghost">GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div class="legal">
+      Jordan Saker · ABN 95 658 646 131<br>
+      Mareeba, QLD, Australia · © 2026
+    </div>
+    <div class="social">
+      <a href="https://github.com/jordansaker">GitHub</a>
+      <a href="mailto:jordan@jordansakerdev.com">Email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})
+  },{threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
