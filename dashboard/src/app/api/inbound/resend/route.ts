@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { db } from "@/db";
 import { emailMessages } from "@/db/schema";
+import { fetchInboundEmail, pickHeader } from "@/lib/resend-inbound";
 import { bumpThread, findOrCreateThread } from "@/lib/threading";
 
 export const runtime = "nodejs";
@@ -11,62 +12,13 @@ export const dynamic = "force-dynamic";
 /**
  * Resend Inbound webhook handler.
  *
- * Resend signs webhook deliveries with Svix. Set RESEND_WEBHOOK_SECRET to the
- * "signing secret" from the Resend dashboard.
- *
- * Payload shape (defensive — Resend may evolve):
- *   {
- *     type: "email.received",
- *     data: {
- *       from:     "Alice <alice@example.com>" | { name, email },
- *       to:       ["jordan@mail.jordansakerdev.com"] | "jordan@…",
- *       cc?:      string[] | string,
- *       subject:  string,
- *       text?:    string,
- *       html?:    string,
- *       headers?: { "message-id"?, "in-reply-to"?, references? } | array,
- *       attachments?: Array<{ filename, contentType, size, content?, url? }>,
- *     }
- *   }
+ * Resend signs deliveries with Svix. The `email.received` event only carries
+ * metadata (from/to/subject/email_id); we follow up with
+ * GET /emails/receiving/{email_id} for the body + full header set, which is
+ * where Message-Id / In-Reply-To / References live for threading.
  */
 
 type AnyObj = Record<string, unknown>;
-
-function asString(v: unknown): string {
-  if (v == null) return "";
-  if (typeof v === "string") return v;
-  if (typeof v === "object") {
-    const o = v as AnyObj;
-    if (typeof o.email === "string") return o.email;
-    if (typeof o.address === "string") return o.address;
-  }
-  return String(v);
-}
-
-function asAddressList(v: unknown): string[] {
-  if (v == null) return [];
-  if (Array.isArray(v)) return v.map(asString).filter(Boolean);
-  return [asString(v)].filter(Boolean);
-}
-
-function pickHeader(headers: unknown, name: string): string | null {
-  const lc = name.toLowerCase();
-  if (!headers) return null;
-  if (Array.isArray(headers)) {
-    for (const h of headers as AnyObj[]) {
-      const k = String(h?.name ?? h?.key ?? "").toLowerCase();
-      if (k === lc) return String(h?.value ?? "");
-    }
-    return null;
-  }
-  if (typeof headers === "object") {
-    const h = headers as AnyObj;
-    for (const k of Object.keys(h)) {
-      if (k.toLowerCase() === lc) return String(h[k] ?? "");
-    }
-  }
-  return null;
-}
 
 export async function POST(req: Request) {
   const secret = process.env.RESEND_WEBHOOK_SECRET;
@@ -92,40 +44,50 @@ export async function POST(req: Request) {
 
   const type = String(payload.type ?? "");
   if (!type.startsWith("email.received") && type !== "inbound.email") {
-    // Acknowledge non-inbound events (e.g. delivery, bounce) so Resend stops retrying.
     return NextResponse.json({ ok: true, ignored: type });
   }
 
   const data = (payload.data ?? payload) as AnyObj;
+  const emailId = typeof data.email_id === "string" ? data.email_id : (data.id as string | undefined);
 
-  const fromAddress = asString(data.from);
-  const toList = asAddressList(data.to);
-  const ccList = asAddressList(data.cc);
-  const subject = String(data.subject ?? "(no subject)");
-  const text = String(data.text ?? "");
-  const html = data.html != null ? String(data.html) : null;
+  if (!emailId) {
+    console.error("[inbound] missing email_id in payload", data);
+    return NextResponse.json({ ok: false, error: "missing email_id" }, { status: 400 });
+  }
 
-  const hdr = data.headers ?? {};
-  const inReplyTo = pickHeader(hdr, "In-Reply-To");
-  const referencesHeader = pickHeader(hdr, "References");
-  const messageId =
-    pickHeader(hdr, "Message-Id") ??
-    `<inbound-${Date.now()}-${Math.random().toString(16).slice(2)}@inbound.local>`;
+  // Fetch the full email (body + headers).
+  let full;
+  try {
+    full = await fetchInboundEmail(emailId);
+  } catch (err) {
+    console.error("[inbound] fetch failed", err);
+    return NextResponse.json({ ok: false, error: "fetch failed" }, { status: 502 });
+  }
+  if (!full) {
+    return NextResponse.json({ ok: false, error: "email not found at Resend" }, { status: 404 });
+  }
 
-  const attachmentsRaw = Array.isArray(data.attachments) ? data.attachments : [];
-  const attachmentMeta = attachmentsRaw.map((a) => {
-    const o = a as AnyObj;
-    return {
-      filename: String(o.filename ?? "attachment"),
-      type: String(o.contentType ?? o.type ?? "application/octet-stream"),
-      size: typeof o.size === "number" ? (o.size as number) : null,
-      url: typeof o.url === "string" ? (o.url as string) : null,
-    };
-  });
+  const fromAddress = full.from;
+  const toList = full.to ?? [];
+  const ccList = full.cc ?? [];
+  const subject = full.subject ?? "(no subject)";
+  const text = full.text ?? "";
+  const html = full.html ?? null;
+
+  const messageId = full.message_id ?? `<inbound-${emailId}@inbound.local>`;
+  const inReplyTo = pickHeader(full.headers, "In-Reply-To");
+  const referencesHeader = pickHeader(full.headers, "References");
+
+  const attachmentMeta = (full.attachments ?? []).map((a) => ({
+    filename: a.filename ?? "attachment",
+    type: a.content_type ?? "application/octet-stream",
+    size: typeof a.size === "number" ? a.size : null,
+    url: a.url ?? null,
+  }));
 
   const senderEmail = (fromAddress.match(/<([^>]+)>/)?.[1] ?? fromAddress).toLowerCase();
 
-  // Idempotency: skip if we've already stored this Message-Id (Resend may retry).
+  // Idempotency: skip if this Message-Id is already stored (Resend retries).
   const [existing] = await db
     .select({ id: emailMessages.id })
     .from(emailMessages)
@@ -156,7 +118,7 @@ export async function POST(req: Request) {
     bodyText: text,
     bodyHtml: html,
     attachments: JSON.stringify(attachmentMeta),
-    rawPayload: rawBody,
+    rawPayload: JSON.stringify({ webhook: payload, full }),
     status: "received",
   });
 
