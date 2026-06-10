@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0e0d0b;
+  --color-bg-2: #15130f;
+  --color-surface: #1b1814;
+  --color-surface-2: #221e19;
+  --color-line: rgba(237, 231, 219, 0.12);
+  --color-line-soft: rgba(237, 231, 219, 0.07);
+  --color-text: #ede7db;
+  --color-muted: #a89c8b;
+  --color-muted-2: #766c5f;
+  --color-accent: #e8743b;
+  --color-accent-soft: rgba(232, 116, 59, 0.14);
+  --color-accent-2: #7fb2a6;
+  --color-accent-2-soft: rgba(127, 178, 166, 0.14);
+  --color-green: #7fb27f;
+  --color-green-soft: rgba(127, 178, 127, 0.14);
+  --color-red: #d6735f;
+  --color-red-soft: rgba(214, 115, 95, 0.14);
+  --color-amber: #d6a95f;
+  --color-amber-soft: rgba(214, 169, 95, 0.14);
+
+  --font-sans: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), "Fraunces", "Times New Roman", serif;
+  --font-mono: var(--font-mono-code), "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+}
+
+@utility mono {
+  font-family: var(--font-mono);
+}
+@utility serif {
+  font-family: var(--font-serif);
+}
