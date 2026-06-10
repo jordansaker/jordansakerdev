@@ -105,15 +105,13 @@ export default async function ThreadPage({ params }: { params: Params }) {
         ))}
       </ul>
 
-      <div className="bg-surface border border-line-soft rounded-2xl p-6">
-        <h2 className="font-serif font-medium text-[1.15rem] mb-4">Reply</h2>
-        <ThreadReply
-          threadId={thread.id}
-          to={thread.participantEmail}
-          subject={ensureReSubject(thread.subject)}
-          sendAction={sendEmailAction}
-        />
-      </div>
+      <ThreadReply
+        threadId={thread.id}
+        to={thread.participantEmail}
+        subject={ensureReSubject(thread.subject)}
+        fromAddress={extractAddress(process.env.RESEND_FROM ?? "jordan@jordansakerdev.com")}
+        sendAction={sendEmailAction}
+      />
     </>
   );
 }
@@ -132,6 +130,11 @@ function fmtDate(d: Date | string): string {
 function ensureReSubject(s: string): string {
   if (/^re:/i.test(s.trim())) return s;
   return `Re: ${s}`;
+}
+
+function extractAddress(from: string): string {
+  const m = from.match(/<([^>]+)>/);
+  return m ? m[1] : from;
 }
 
 function parseAttachments(json: string): Array<{ filename: string; size?: number | null }> {
