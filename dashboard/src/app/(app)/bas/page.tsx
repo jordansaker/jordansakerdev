@@ -76,7 +76,7 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <Stat
           label="1A · GST on sales"
           value={formatCents0(data.gstCollectedCents)}
@@ -98,26 +98,28 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
         {data.invoices.length === 0 ? (
           <Empty>No invoices in this quarter</Empty>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr>
-                <Th>Invoice</Th>
-                <Th>Client</Th>
-                <Th className="text-right">Sale (ex GST)</Th>
-                <Th className="text-right">GST</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.invoices.map((i) => (
-                <tr key={i.id} className="hover:bg-surface-2 transition-colors">
-                  <Td className="mono">{i.number}</Td>
-                  <Td>{i.clientName}</Td>
-                  <Td className="mono text-right">{formatCents(i.subtotalCents)}</Td>
-                  <Td className="mono text-right text-accent">{formatCents(i.gstCents)}</Td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
+              <thead>
+                <tr>
+                  <Th>Invoice</Th>
+                  <Th>Client</Th>
+                  <Th className="text-right">Sale (ex GST)</Th>
+                  <Th className="text-right">GST</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.invoices.map((i) => (
+                  <tr key={i.id} className="hover:bg-surface-2 transition-colors">
+                    <Td className="mono whitespace-nowrap">{i.number}</Td>
+                    <Td>{i.clientName}</Td>
+                    <Td className="mono text-right whitespace-nowrap">{formatCents(i.subtotalCents)}</Td>
+                    <Td className="mono text-right text-accent whitespace-nowrap">{formatCents(i.gstCents)}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Panel>
 
@@ -127,37 +129,39 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
           {data.expenses.length === 0 ? (
             <Empty>No expenses in this quarter</Empty>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <Th>Expense</Th>
-                  <Th>Date</Th>
-                  <Th className="text-right">Amount (ex GST)</Th>
-                  <Th className="text-right">GST</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody>
-                {data.expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-surface-2 transition-colors">
-                    <Td>{e.description}</Td>
-                    <Td className="mono text-muted">{e.spentOn}</Td>
-                    <Td className="mono text-right">{formatCents(e.amountCents)}</Td>
-                    <Td className="mono text-right text-accent-2">
-                      {e.hasGst ? formatCents(Math.round(e.amountCents * 0.1)) : "—"}
-                    </Td>
-                    <Td className="text-right">
-                      <form action={deleteExpenseAction} className="inline">
-                        <input type="hidden" name="id" value={e.id} />
-                        <button type="submit" className="text-[0.78rem] text-muted-2 hover:text-red">
-                          Delete
-                        </button>
-                      </form>
-                    </Td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr>
+                    <Th>Expense</Th>
+                    <Th>Date</Th>
+                    <Th className="text-right">Amount (ex GST)</Th>
+                    <Th className="text-right">GST</Th>
+                    <Th />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.expenses.map((e) => (
+                    <tr key={e.id} className="hover:bg-surface-2 transition-colors">
+                      <Td>{e.description}</Td>
+                      <Td className="mono text-muted whitespace-nowrap">{e.spentOn}</Td>
+                      <Td className="mono text-right whitespace-nowrap">{formatCents(e.amountCents)}</Td>
+                      <Td className="mono text-right text-accent-2 whitespace-nowrap">
+                        {e.hasGst ? formatCents(Math.round(e.amountCents * 0.1)) : "—"}
+                      </Td>
+                      <Td className="text-right">
+                        <form action={deleteExpenseAction} className="inline">
+                          <input type="hidden" name="id" value={e.id} />
+                          <button type="submit" className="text-[0.78rem] text-muted-2 hover:text-red">
+                            Delete
+                          </button>
+                        </form>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </Panel>
       </div>

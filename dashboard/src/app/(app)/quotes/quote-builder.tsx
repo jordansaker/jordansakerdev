@@ -149,7 +149,7 @@ export function QuoteBuilder({
         <label className="block mono text-[0.66rem] tracking-[0.1em] uppercase text-muted mt-2 mb-2.5">
           Line items
         </label>
-        <div className="grid grid-cols-[1fr_70px_110px_36px] gap-2.5 text-muted-2 text-[0.7rem] mono mb-1">
+        <div className="grid grid-cols-[1fr_60px_90px_28px] sm:grid-cols-[1fr_70px_110px_36px] gap-2.5 text-muted-2 text-[0.7rem] mono mb-1">
           <span>DESCRIPTION</span>
           <span>QTY</span>
           <span>UNIT PRICE</span>
@@ -157,7 +157,7 @@ export function QuoteBuilder({
         </div>
         <div className="space-y-2">
           {lines.map((l, i) => (
-            <div key={i} className="grid grid-cols-[1fr_70px_110px_36px] gap-2.5 items-center">
+            <div key={i} className="grid grid-cols-[1fr_60px_90px_28px] sm:grid-cols-[1fr_70px_110px_36px] gap-2.5 items-center">
               <input
                 value={l.description}
                 placeholder="Description"

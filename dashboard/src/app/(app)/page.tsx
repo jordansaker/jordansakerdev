@@ -57,30 +57,34 @@ export default async function OverviewPage() {
         {recent.length === 0 ? (
           <Empty>No invoices yet — create your first one from a quote.</Empty>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr>
-                <Th>Invoice</Th>
-                <Th>Client</Th>
-                <Th>Date</Th>
-                <Th>Status</Th>
-                <Th className="text-right">Total</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {recent.map((i) => (
-                <tr key={i.id} className="hover:bg-surface-2 transition-colors">
-                  <Td className="mono">{i.number}</Td>
-                  <Td>{i.clientName}</Td>
-                  <Td className="mono text-muted">{i.issueDate}</Td>
-                  <Td>
-                    <Tag variant={i.status as TagVariant}>{i.status}</Tag>
-                  </Td>
-                  <Td className="mono text-right font-medium">{formatCents(i.totalCents)}</Td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
+              <thead>
+                <tr>
+                  <Th>Invoice</Th>
+                  <Th>Client</Th>
+                  <Th>Date</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Total</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recent.map((i) => (
+                  <tr key={i.id} className="hover:bg-surface-2 transition-colors">
+                    <Td className="mono whitespace-nowrap">{i.number}</Td>
+                    <Td>{i.clientName}</Td>
+                    <Td className="mono text-muted whitespace-nowrap">{i.issueDate}</Td>
+                    <Td>
+                      <Tag variant={i.status as TagVariant}>{i.status}</Tag>
+                    </Td>
+                    <Td className="mono text-right font-medium whitespace-nowrap">
+                      {formatCents(i.totalCents)}
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Panel>
     </>

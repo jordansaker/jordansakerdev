@@ -31,20 +31,21 @@ export default async function InvoicesPage() {
         {invoices.length === 0 ? (
           <Empty>No invoices yet — create one from a quote.</Empty>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr>
-                <Th>Invoice</Th>
-                <Th>Client</Th>
-                <Th>Date</Th>
-                <Th>Status</Th>
-                <Th className="text-right">Subtotal</Th>
-                <Th className="text-right">GST</Th>
-                <Th className="text-right">Total</Th>
-                <Th />
-              </tr>
-            </thead>
-            <tbody>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[920px]">
+              <thead>
+                <tr>
+                  <Th>Invoice</Th>
+                  <Th>Client</Th>
+                  <Th>Date</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Subtotal</Th>
+                  <Th className="text-right">GST</Th>
+                  <Th className="text-right">Total</Th>
+                  <Th />
+                </tr>
+              </thead>
+              <tbody>
               {invoices.map((i) => (
                 <tr key={i.id} className="hover:bg-surface-2 transition-colors">
                   <Td className="mono">{i.number}</Td>
@@ -89,8 +90,9 @@ export default async function InvoicesPage() {
                   </Td>
                 </tr>
               ))}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         )}
       </Panel>
 

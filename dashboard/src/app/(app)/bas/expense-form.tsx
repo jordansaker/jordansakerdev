@@ -23,9 +23,9 @@ export function ExpenseForm({ action }: { action: Action }) {
           else formRef.current?.reset();
         })
       }
-      className="grid grid-cols-[1fr_140px_140px_auto_auto] items-end gap-2 px-5 py-4 border-b border-line-soft"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_140px_140px_auto_auto] items-end gap-2 px-5 py-4 border-b border-line-soft"
     >
-      <Field label="Description">
+      <Field label="Description" className="sm:col-span-2 lg:col-span-1">
         <input
           name="description"
           required
@@ -58,7 +58,7 @@ export function ExpenseForm({ action }: { action: Action }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-accent text-bg font-semibold text-[0.85rem] px-3 py-2 disabled:opacity-50"
+        className="rounded-lg bg-accent text-bg font-semibold text-[0.85rem] px-3 py-2 disabled:opacity-50 sm:col-span-2 lg:col-span-1"
       >
         {pending ? "Adding…" : "Add"}
       </button>
@@ -70,9 +70,17 @@ export function ExpenseForm({ action }: { action: Action }) {
 const inputClass =
   "w-full bg-bg-2 border border-line rounded-lg px-3 py-2 text-[0.88rem] focus:outline-none focus:border-accent";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  className = "",
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div>
+    <div className={className}>
       <label className="block mono text-[0.66rem] tracking-[0.1em] uppercase text-muted mb-1.5">
         {label}
       </label>

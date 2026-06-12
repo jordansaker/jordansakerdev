@@ -51,18 +51,19 @@ export default async function QuotesPage() {
           {quotes.length === 0 ? (
             <Empty>No quotes saved yet.</Empty>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <Th>Quote</Th>
-                  <Th>Client</Th>
-                  <Th>Date</Th>
-                  <Th>Status</Th>
-                  <Th className="text-right">Total</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px]">
+                <thead>
+                  <tr>
+                    <Th>Quote</Th>
+                    <Th>Client</Th>
+                    <Th>Date</Th>
+                    <Th>Status</Th>
+                    <Th className="text-right">Total</Th>
+                    <Th />
+                  </tr>
+                </thead>
+                <tbody>
                 {quotes.map((q) => (
                   <tr key={q.id} className="hover:bg-surface-2 transition-colors">
                     <Td className="mono">{q.number}</Td>
@@ -101,8 +102,9 @@ export default async function QuotesPage() {
                     </Td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           )}
         </Panel>
       </div>
