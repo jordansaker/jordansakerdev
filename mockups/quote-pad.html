@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote Pad — theme build pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171b23; --ink-2:#1f2530; --ink-3:#2c3340; --ink-line:#363d4b;
+    --ink-text:#e9ebe7; --ink-muted:#838d9d;
+    --paper:#edefea; --paper-2:#e4e7e0; --paper-line:#d4d8cd;
+    --paper-text:#1b2027; --paper-muted:#5f6860;
+    --brass:#c89545; --brass-soft:#e0bd7e;
+    --good:#4e9b6a; --warn:#cf9a3c; --bad:#bd584b;
+    --r:10px;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:var(--body); background:var(--ink); color:var(--ink-text);
+    min-height:100vh; display:flex; align-items:flex-start; justify-content:center;
+    padding:clamp(12px,3vw,40px); line-height:1.5;
+  }
+  .pad{
+    width:100%; max-width:980px; background:var(--ink-2);
+    border:1px solid var(--ink-line); border-radius:16px; overflow:hidden;
+    box-shadow:0 24px 60px -24px rgba(0,0,0,.6);
+    display:grid; grid-template-columns:minmax(0,0.86fr) minmax(0,1.14fr);
+  }
+  @media(max-width:760px){ .pad{grid-template-columns:1fr} }
+
+  /* ---- control rail ---- */
+  .rail{ padding:clamp(20px,3vw,30px); border-right:1px solid var(--ink-line); }
+  @media(max-width:760px){ .rail{border-right:none;border-bottom:1px solid var(--ink-line)} }
+  .brand{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px;}
+  .brand h1{ font-family:var(--display); font-weight:700; font-size:21px; letter-spacing:-.01em;}
+  .brand .dot{ width:8px;height:8px;border-radius:2px;background:var(--brass); transform:translateY(-2px);}
+  .tag{ color:var(--ink-muted); font-size:12.5px; margin-bottom:26px; }
+
+  .field{ margin-bottom:21px; }
+  .field > label{ display:flex; justify-content:space-between; align-items:baseline;
+    font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--ink-muted); margin-bottom:9px; }
+  .field .val{ font-family:var(--mono); font-weight:500; color:var(--brass-soft);
+    font-size:13px; text-transform:none; letter-spacing:0;}
+  .numwrap{ position:relative; display:flex; align-items:center; }
+  .numwrap .pre{ position:absolute; left:13px; font-family:var(--mono); color:var(--ink-muted); font-size:14px; pointer-events:none;}
+  input[type=number]{
+    width:100%; background:var(--ink); border:1px solid var(--ink-3); color:var(--ink-text);
+    font-family:var(--mono); font-size:15px; padding:11px 13px 11px 26px; border-radius:8px;
+    -moz-appearance:textfield;
+  }
+  input[type=number].nopre{ padding-left:13px; }
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input:focus-visible, .seg button:focus-visible, input[type=range]:focus-visible{
+    outline:2px solid var(--brass); outline-offset:2px;
+  }
+  .seg{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .seg button{
+    font-family:var(--body); font-size:12.5px; font-weight:500; cursor:pointer;
+    background:var(--ink); color:var(--ink-muted); border:1px solid var(--ink-3);
+    padding:9px 4px; border-radius:7px; transition:all .15s; line-height:1.15;
+  }
+  .seg button .mx{ display:block; font-family:var(--mono); font-size:11px; margin-top:2px; opacity:.7;}
+  .seg button[aria-pressed=true]{ background:var(--brass); color:#1a130a; border-color:var(--brass); font-weight:600;}
+  .seg button[aria-pressed=true] .mx{opacity:.85}
+  input[type=range]{ -webkit-appearance:none; width:100%; height:4px; border-radius:4px;
+    background:var(--ink-3); cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px;height:18px;border-radius:50%;
+    background:var(--brass); border:3px solid var(--ink-2); cursor:pointer; box-shadow:0 0 0 1px var(--brass);}
+  input[type=range]::-moz-range-thumb{ width:15px;height:15px;border-radius:50%; background:var(--brass);
+    border:3px solid var(--ink-2); cursor:pointer;}
+
+  /* ---- quote sheet ---- */
+  .sheet{ background:var(--paper); color:var(--paper-text);
+    padding:clamp(22px,3vw,32px); position:relative;
+    background-image:repeating-linear-gradient(var(--paper) 0 31px, var(--paper-line) 31px 32px);
+    background-attachment:local;
+  }
+  .sheet .eyebrow{ font-family:var(--display); font-size:11px; font-weight:600; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--paper-muted); margin-bottom:14px;}
+  .headline{ display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:6px;}
+  .headline .big{ font-family:var(--mono); font-weight:700; font-size:clamp(34px,7vw,50px);
+    letter-spacing:-.02em; line-height:1; color:var(--paper-text);}
+  .headline .big .cur{ font-size:.5em; color:var(--paper-muted); font-weight:500; margin-right:1px;}
+  .headline .strike{ font-family:var(--mono); font-size:16px; color:var(--paper-muted);
+    text-decoration:line-through; padding-bottom:4px;}
+  .range-line{ font-family:var(--mono); font-size:13.5px; color:var(--paper-muted); margin-bottom:3px;}
+  .tier-line{ font-size:13px; color:var(--paper-text); margin-bottom:22px;}
+  .tier-line b{ font-weight:600; }
+  .tier-line .pill{ font-family:var(--mono); font-size:11px; background:var(--paper-2);
+    border:1px solid var(--paper-line); padding:1px 7px; border-radius:20px; margin-left:2px;}
+
+  .block{ border-top:1.5px solid var(--paper-text); padding-top:15px; margin-top:4px; }
+  .block + .block{ margin-top:24px; }
+  .block h3{ font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:.02em;
+    text-transform:uppercase; margin-bottom:14px; display:flex; justify-content:space-between; align-items:baseline;}
+  .block h3 .note{ font-family:var(--mono); font-size:11px; font-weight:400; text-transform:none;
+    letter-spacing:0; color:var(--paper-muted);}
+
+  /* market bar */
+  .bar{ position:relative; height:30px; border-radius:6px; overflow:hidden; display:flex;
+    border:1px solid var(--paper-line); }
+  .bar .seg-m{ height:100%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:9.5px; color:var(--paper-text); opacity:.55; overflow:hidden; white-space:nowrap;}
+  .bar .marker{ position:absolute; top:-4px; bottom:-4px; width:3px; background:var(--paper-text);
+    transition:left .35s cubic-bezier(.2,.7,.2,1); border-radius:2px;}
+  .bar .marker::after{ content:''; position:absolute; top:-5px; left:50%; transform:translateX(-50%);
+    border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid var(--paper-text);}
+  .scale{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px;
+    color:var(--paper-muted); margin-top:5px;}
+
+  /* gauge */
+  .gauge-top{ display:flex; align-items:baseline; gap:9px; margin-bottom:11px;}
+  .gauge-top .mins{ font-family:var(--mono); font-weight:700; font-size:30px; line-height:1; transition:color .3s;}
+  .gauge-top .mlab{ font-size:12.5px; color:var(--paper-muted); max-width:230px;}
+  .track{ position:relative; height:12px; border-radius:6px; overflow:hidden;
+    background:linear-gradient(90deg,var(--bad) 0%,var(--bad) 25%,var(--warn) 25%,var(--warn) 50%,var(--good) 50%,var(--good) 100%);
+    border:1px solid var(--paper-line);}
+  .track .needle{ position:absolute; top:-3px; bottom:-3px; width:3px; background:var(--paper-text);
+    border-radius:2px; transition:left .35s cubic-bezier(.2,.7,.2,1); box-shadow:0 0 0 2px var(--paper);}
+  .track-scale{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px;
+    color:var(--paper-muted); margin-top:5px;}
+  .verdict{ font-size:13px; line-height:1.5; margin-top:13px; padding:11px 13px; border-radius:8px;
+    background:var(--paper-2); border-left:3px solid var(--paper-muted); transition:border-color .3s;}
+  .verdict.good{border-left-color:var(--good)} .verdict.warn{border-left-color:var(--warn)} .verdict.bad{border-left-color:var(--bad)}
+
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-top:16px;}
+  @media(max-width:420px){ .stats{grid-template-columns:1fr} }
+  .stat{ background:var(--paper-2); border:1px solid var(--paper-line); border-radius:9px; padding:12px 14px;}
+  .stat .k{ font-size:11px; color:var(--paper-muted); margin-bottom:5px; letter-spacing:.02em;}
+  .stat .v{ font-family:var(--mono); font-weight:700; font-size:22px; line-height:1.05; color:var(--paper-text);}
+  .stat .v small{ font-size:12px; font-weight:500; color:var(--paper-muted);}
+
+  .foot{ font-size:11px; color:var(--paper-muted); line-height:1.55; margin-top:24px;
+    border-top:1px solid var(--paper-line); padding-top:13px;}
+  @media(prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="pad">
+  <!-- CONTROLS -->
+  <section class="rail" aria-label="Job inputs">
+    <div class="brand"><span class="dot"></span><h1>Quote Pad</h1></div>
+    <p class="tag">Scope in. Defensible quote out. No flattering yourself.</p>
+
+    <div class="field">
+      <label for="hours">Estimated build hours <span class="val" id="hoursV">50 h</span></label>
+      <input type="range" id="hours" min="4" max="160" step="2" value="50">
+    </div>
+
+    <div class="field">
+      <label for="rate">Your hourly rate</label>
+      <div class="numwrap"><span class="pre">$</span><input type="number" id="rate" value="80" min="0" step="5"></div>
+    </div>
+
+    <div class="field">
+      <label>Store complexity <span class="val" id="cxV">×1.5</span></label>
+      <div class="seg" id="cx" role="group" aria-label="Complexity multiplier">
+        <button data-m="1" aria-pressed="false">Simple<span class="mx">×1.0</span></button>
+        <button data-m="1.25" aria-pressed="false">Standard<span class="mx">×1.25</span></button>
+        <button data-m="1.5" aria-pressed="true">Complex<span class="mx">×1.5</span></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="buffer">Revision buffer <span class="val" id="bufferV">15%</span></label>
+      <input type="range" id="buffer" min="0" max="40" step="5" value="15">
+    </div>
+
+    <div class="field">
+      <label for="retainer">Monthly retainer</label>
+      <div class="numwrap"><span class="pre">$</span><input type="number" id="retainer" value="32" min="0" step="1"></div>
+    </div>
+
+    <div class="field">
+      <label for="discount">First-client / case-study discount <span class="val" id="discountV">0%</span></label>
+      <input type="range" id="discount" min="0" max="50" step="5" value="0">
+    </div>
+
+    <div class="field" style="margin-bottom:0">
+      <label for="goal">Monthly recurring goal</label>
+      <div class="numwrap"><span class="pre">$</span><input type="number" id="goal" value="3000" min="0" step="100"></div>
+    </div>
+  </section>
+
+  <!-- OUTPUT -->
+  <section class="sheet" aria-label="Quote" aria-live="polite">
+    <p class="eyebrow">Recommended build fee</p>
+    <div class="headline">
+      <div class="big"><span class="cur">$</span><span id="quote">0</span></div>
+      <span class="strike" id="strike" hidden></span>
+    </div>
+    <p class="range-line">Negotiating band <span id="band">—</span></p>
+    <p class="tier-line">Lands in the <b id="tierName">—</b> tier of the market <span class="pill" id="tierRange"></span></p>
+
+    <div class="block">
+      <h3>Market position <span class="note">log scale · ballpark AUD</span></h3>
+      <div class="bar" id="bar"><div class="marker" id="marker" style="left:0"></div></div>
+      <div class="scale"><span>$150</span><span>$1k</span><span>$8k</span><span>$50k</span></div>
+    </div>
+
+    <div class="block">
+      <h3>Retainer reality check</h3>
+      <div class="gauge-top">
+        <span class="mins" id="mins">0</span>
+        <span class="mlab">minutes of your time, per client, per month — that's all this retainer buys</span>
+      </div>
+      <div class="track"><div class="needle" id="needle" style="left:0"></div></div>
+      <div class="track-scale"><span>0</span><span>30m</span><span>60m</span><span>2h+</span></div>
+      <p class="verdict" id="verdict">—</p>
+      <div class="stats">
+        <div class="stat"><div class="k">Build fee equals</div><div class="v" id="months">0 <small>months of retainer</small></div></div>
+        <div class="stat"><div class="k">Clients to hit goal</div><div class="v" id="clients">0 <small>to maintain</small></div></div>
+        <div class="stat"><div class="k">Effective rate, post-discount</div><div class="v" id="effrate">$0<small>/h</small></div></div>
+        <div class="stat"><div class="k">Year-one per client</div><div class="v" id="yr1">$0</div></div>
+      </div>
+    </div>
+
+    <p class="foot">Market tiers are 2026 freelance ranges (USD-derived, read as ballpark AUD): quick fixes ~$150–700, customization ~$600–3,500, substantial ~$2,500–8,000, from-scratch ~$8,000+. A guide for sizing a quote, not a law. The retainer figure is deliberately blunt: at your rate, it shows the literal time budget each client buys you each month before the work runs at a loss.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var state={hours:50,rate:80,mult:1.5,buffer:15,retainer:32,discount:0,goal:3000};
+
+  var fmt=function(n){return Math.round(n).toLocaleString('en-AU')};
+  var tiers=[
+    {name:'Quick fixes', min:150, max:700},
+    {name:'Customization', min:600, max:3500},
+    {name:'Substantial', min:2500, max:8000},
+    {name:'From scratch', min:8000, max:50000}
+  ];
+  // log positioning 150 -> 50000
+  var LMIN=Math.log(150), LMAX=Math.log(50000);
+  var logPos=function(v){ v=Math.max(150,Math.min(50000,v)); return (Math.log(v)-LMIN)/(LMAX-LMIN)*100; };
+
+  // build market bar segments once (log-weighted widths)
+  (function(){
+    var bar=$('bar'); var bounds=[150,700,3500,8000,50000];
+    var labels=['fixes','customization','substantial','scratch'];
+    var html='';
+    for(var i=0;i<4;i++){
+      var w=logPos(bounds[i+1])-logPos(bounds[i]);
+      var shade=['#dfe3da','#d2d8c9','#c3cbb6','#b3bda3'][i];
+      html+='<div class="seg-m" style="width:'+w+'%;background:'+shade+'">'+labels[i]+'</div>';
+    }
+    bar.insertAdjacentHTML('afterbegin',html);
+  })();
+
+  function tierOf(v){
+    if(v<700) return tiers[0];
+    if(v<3500) return tiers[1];
+    if(v<8000) return tiers[2];
+    return tiers[3];
+  }
+
+  function render(){
+    var s=state;
+    var effHours=s.hours*s.mult;
+    var labor=effHours*s.rate;
+    var recommended=labor*(1+s.buffer/100);
+    var low=recommended*0.9, high=recommended*1.15;
+    var discounted=recommended*(1-s.discount/100);
+    var effRate=effHours>0?discounted/effHours:0;
+
+    // headline shows the actual (post-discount) price you'd charge
+    $('quote').textContent=fmt(discounted);
+    var strike=$('strike');
+    if(s.discount>0){ strike.hidden=false; strike.textContent='$'+fmt(recommended); }
+    else strike.hidden=true;
+    $('band').textContent='$'+fmt(low)+' – $'+fmt(high);
+
+    var t=tierOf(recommended);
+    $('tierName').textContent=t.name;
+    $('tierRange').textContent='$'+fmt(t.min)+'–$'+fmt(t.max);
+    $('marker').style.left=logPos(recommended)+'%';
+
+    // retainer reality
+    var mins=s.rate>0?(s.retainer/s.rate)*60:0;
+    var minsEl=$('mins'); minsEl.textContent=Math.round(mins);
+    var col = mins<30?'var(--bad)':(mins<60?'var(--warn)':'var(--good)');
+    minsEl.style.color=col;
+    // needle on 0..120 scale
+    $('needle').style.left=Math.max(0,Math.min(100,(mins/120)*100))+'%';
+
+    var v=$('verdict');
+    v.className='verdict '+(mins<30?'bad':(mins<60?'warn':'good'));
+    if(mins<30){
+      v.textContent='This barely covers opening their email. One real support request and the month runs at a loss. Raise the retainer, cap support to a set number of requests, or automate maintenance hard.';
+    } else if(mins<60){
+      v.textContent='Tight. Workable only if upkeep is mostly automated — fine for a quiet client, risky for one who emails often. Watch your scope of "maintenance" carefully.';
+    } else {
+      v.textContent='There is genuine room for real monthly upkeep at this retainer. Sustainable, provided your build estimate held.';
+    }
+
+    var months=s.retainer>0?discounted/s.retainer:0;
+    $('months').innerHTML=fmt(months)+' <small>months of retainer</small>';
+    var clients=s.retainer>0?Math.ceil(s.goal/s.retainer):0;
+    $('clients').innerHTML=fmt(clients)+' <small>sites to maintain</small>';
+    $('effrate').innerHTML='$'+fmt(effRate)+'<small>/h</small>';
+    $('yr1').textContent='$'+fmt(discounted+s.retainer*12);
+
+    // warn colour on effective rate if discount craters it below ~60% of target rate
+    $('effrate').style.color = (s.discount>0 && effRate < s.rate*0.6) ? 'var(--bad)' : 'var(--paper-text)';
+  }
+
+  // wire inputs
+  function bindRange(id,key,suffix){
+    var el=$(id), out=$(id+'V');
+    el.addEventListener('input',function(){ state[key]=+el.value; if(out)out.textContent=el.value+suffix; render(); });
+  }
+  bindRange('hours','hours',' h');
+  bindRange('buffer','buffer','%');
+  bindRange('discount','discount','%');
+  $('rate').addEventListener('input',function(){ state.rate=+this.value||0; render(); });
+  $('retainer').addEventListener('input',function(){ state.retainer=+this.value||0; render(); });
+  $('goal').addEventListener('input',function(){ state.goal=+this.value||0; render(); });
+
+  var cx=$('cx');
+  cx.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    [].forEach.call(cx.querySelectorAll('button'),function(x){x.setAttribute('aria-pressed','false')});
+    b.setAttribute('aria-pressed','true');
+    state.mult=+b.dataset.m; $('cxV').textContent='×'+state.mult;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
