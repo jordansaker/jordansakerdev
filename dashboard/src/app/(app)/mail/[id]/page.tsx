@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHead } from "@/components/ui";
-import { sendEmailAction } from "../../email/actions";
+import { sendEmailAction } from "../actions";
 import { getThread, markThreadRead } from "@/lib/threading";
 import { ThreadReply } from "./thread-reply";
 
@@ -43,10 +43,10 @@ export default async function ThreadPage({ params }: { params: Params }) {
         }
         right={
           <Link
-            href="/threads"
+            href="/mail?tab=inbox"
             className="rounded-full border border-line text-text font-semibold text-[0.88rem] px-4 py-2.5 hover:border-text transition-colors"
           >
-            ← All threads
+            ← Inbox
           </Link>
         }
       />

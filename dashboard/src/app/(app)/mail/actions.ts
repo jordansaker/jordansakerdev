@@ -156,9 +156,8 @@ export async function sendEmailAction(formData: FormData): Promise<SendEmailResu
 
   await bumpThread(resolvedThreadId);
 
-  revalidatePath("/email");
-  revalidatePath("/threads");
-  revalidatePath(`/threads/${resolvedThreadId}`);
+  revalidatePath("/mail");
+  revalidatePath(`/mail/${resolvedThreadId}`);
 
   if (resendError) return { ok: false, error: resendError };
   return { ok: true, id: row.id, threadId: resolvedThreadId };

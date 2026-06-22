@@ -79,23 +79,12 @@ const items = [
     ),
   },
   {
-    href: "/email",
-    label: "Send email",
+    href: "/mail",
+    label: "Mail",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <rect x="3" y="5" width="18" height="14" rx="2" />
         <path d="M3 7l9 6 9-6" />
-      </svg>
-    ),
-  },
-  {
-    href: "/threads",
-    label: "Inbox",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M3 7l3 8h12l3-8" />
-        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" />
-        <path d="M9 15h6" />
       </svg>
     ),
   },

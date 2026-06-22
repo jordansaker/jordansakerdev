@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BrandEmailPreview } from "@/components/brand-email-preview";
-import type { SendEmailResult } from "../../email/actions";
+import type { SendEmailResult } from "../actions";
 
 type SendAction = (fd: FormData) => Promise<SendEmailResult>;
 
