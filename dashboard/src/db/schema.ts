@@ -149,6 +149,54 @@ export const emailMessages = pgTable(
   (t) => [uniqueIndex("email_messages_message_id_unique").on(t.messageIdHeader)],
 );
 
+export const txDirection = pgEnum("tx_direction", ["credit", "debit"]);
+export const txStatus = pgEnum("tx_status", [
+  "pending",
+  "imported",
+  "ignored",
+  "matched",
+]);
+
+export const bankStatements = pgTable(
+  "bank_statements",
+  {
+    id: serial().primaryKey(),
+    filename: text().notNull(),
+    contentHash: text().notNull().unique(),
+    bsb: text(),
+    accountNumber: text(),
+    periodStart: date(),
+    periodEnd: date(),
+    openingBalanceCents: integer(),
+    closingBalanceCents: integer(),
+    transactionCount: integer().notNull().default(0),
+    uploadedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    importedAt: timestamp({ withTimezone: true }),
+  },
+);
+
+export const bankTransactions = pgTable("bank_transactions", {
+  id: serial().primaryKey(),
+  statementId: integer()
+    .notNull()
+    .references(() => bankStatements.id, { onDelete: "cascade" }),
+  txDate: date().notNull(),
+  description: text().notNull(),
+  amountCents: integer().notNull(),
+  direction: txDirection().notNull(),
+  balanceCents: integer(),
+  status: txStatus().notNull().default("pending"),
+  matchedInvoiceId: integer().references(() => invoices.id, {
+    onDelete: "set null",
+  }),
+  matchedExpenseId: integer().references(() => expenses.id, {
+    onDelete: "set null",
+  }),
+  hasGstGuess: boolean().notNull().default(true),
+  sortOrder: integer().notNull().default(0),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export const expenses = pgTable("expenses", {
   id: serial().primaryKey(),
   description: text().notNull(),
@@ -193,3 +241,5 @@ export type InvoiceLine = typeof invoiceLines.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
 export type EmailThread = typeof emailThreads.$inferSelect;
 export type EmailMessage = typeof emailMessages.$inferSelect;
+export type BankStatement = typeof bankStatements.$inferSelect;
+export type BankTransaction = typeof bankTransactions.$inferSelect;
