@@ -95,10 +95,21 @@ const HEADER_HINTS = {
   date: ["date", "transaction date", "txn date", "posting date"],
   amount: ["amount", "value", "debit/credit", "transaction amount"],
   description: ["description", "narration", "details", "transaction details", "particulars"],
+  txType: ["transaction type", "type"],
+  merchant: ["merchant name", "merchant"],
+  category: ["category"],
   balance: ["balance", "running balance", "account balance"],
 };
 
-type ColumnMap = { date: number; amount: number; description: number; balance: number };
+type ColumnMap = {
+  date: number;
+  amount: number;
+  description: number;
+  txType: number;
+  merchant: number;
+  category: number;
+  balance: number;
+};
 
 function detectColumns(header: string[]): ColumnMap | null {
   const norm = header.map((h) => h.trim().toLowerCase());
@@ -111,8 +122,49 @@ function detectColumns(header: string[]): ColumnMap | null {
     date,
     amount,
     description,
+    txType: find(HEADER_HINTS.txType),
+    merchant: find(HEADER_HINTS.merchant),
+    category: find(HEADER_HINTS.category),
     balance: find(HEADER_HINTS.balance),
   };
+}
+
+const MONTH_ABBR: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
+
+const OPAQUE_REFERENCE_RE = /^(NPP[-_]|BPAY\b|EFT\b|REF\b|PAYID[-_]|OSKO[-_]|RTGS[-_])/i;
+
+function cleanDescription(
+  row: string[],
+  cols: ColumnMap,
+): string {
+  const get = (idx: number) =>
+    idx >= 0 && row[idx] ? row[idx].replace(/\s+/g, " ").trim() : "";
+
+  const details = get(cols.description);
+  const txType = get(cols.txType);
+  const merchant = get(cols.merchant);
+  const category = get(cols.category);
+
+  // Build a readable description. Prefer human-readable parts (txType, merchant,
+  // category) over opaque transfer references like NPP-ANZBAU3LXXX...
+  const detailsLooksOpaque = OPAQUE_REFERENCE_RE.test(details);
+
+  const parts: string[] = [];
+  if (detailsLooksOpaque) {
+    if (txType) parts.push(txType);
+    else if (category) parts.push(category);
+    if (merchant && merchant !== txType) parts.push(merchant);
+    parts.push(details); // keep the reference at the end for traceability
+  } else {
+    parts.push(details);
+    if (merchant && !details.toLowerCase().includes(merchant.toLowerCase())) {
+      parts.push(merchant);
+    }
+  }
+  return parts.filter(Boolean).join(" · ");
 }
 
 function parseAmount(s: string): number | null {
@@ -127,17 +179,24 @@ function parseAmount(s: string): number | null {
  * Parse a date string into YYYY-MM-DD. Accepts:
  *   - DD/MM/YYYY  (NAB Australian)
  *   - DD/MM/YY    (2-digit year → 2000s)
- *   - DD-MM-YYYY
+ *   - DD-MM-YYYY  or DD-MM-YY
+ *   - DD MMM YYYY (e.g. "22 Jun 2026")
+ *   - DD MMM YY   (e.g. "22 Jun 26" — NAB transaction CSV)
+ *   - DD-MMM-YYYY or DD-MMM-YY
  *   - YYYY-MM-DD  (already ISO)
  */
 function parseDate(s: string): string | null {
   const t = s.trim();
   if (!t) return null;
+
+  // YYYY-MM-DD
   let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (m) {
     const [, y, mo, d] = m;
     return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
+
+  // DD/MM/YYYY or DD/MM/YY (also handles DD-MM-YY[YY])
   m = t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (m) {
     const [, d, mo, ys] = m;
@@ -145,6 +204,18 @@ function parseDate(s: string): string | null {
     if (year < 100) year += 2000;
     return `${year}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
+
+  // DD MMM YY[YY] or DD-MMM-YY[YY]
+  m = t.match(/^(\d{1,2})[\s\-]+([A-Za-z]{3,9})[\s\-]+(\d{2,4})$/);
+  if (m) {
+    const [, d, monStr, ys] = m;
+    const mo = MONTH_ABBR[monStr.slice(0, 3).toLowerCase()];
+    if (!mo) return null;
+    let year = Number(ys);
+    if (year < 100) year += 2000;
+    return `${year}-${String(mo).padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+
   return null;
 }
 
@@ -170,7 +241,15 @@ export async function parseStatement(buffer: Buffer): Promise<ParsedStatement> {
         "Couldn't read column layout. Export the CSV from NAB Internet Banking with default columns (Date, Amount, Description, Balance).",
       );
     }
-    cols = { date: 0, amount: 1, description: 2, balance: rows[0].length > 3 ? 3 : -1 };
+    cols = {
+      date: 0,
+      amount: 1,
+      description: 2,
+      txType: -1,
+      merchant: -1,
+      category: -1,
+      balance: rows[0].length > 3 ? 3 : -1,
+    };
     dataRows = rows;
   }
 
@@ -190,7 +269,7 @@ export async function parseStatement(buffer: Buffer): Promise<ParsedStatement> {
     const amountCents = Math.abs(signedAmount);
     if (amountCents === 0) continue;
 
-    const description = rawDescription.replace(/\s+/g, " ").trim();
+    const description = cleanDescription(r, cols);
     if (!description) continue;
 
     let balanceCents: number | null = null;
