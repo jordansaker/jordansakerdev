@@ -48,7 +48,9 @@ export default async function InvoicesPage() {
               <tbody>
               {invoices.map((i) => (
                 <tr key={i.id} className="hover:bg-surface-2 transition-colors">
-                  <Td className="mono">{i.number}</Td>
+                  <Td className="mono">
+                    {i.number ?? <span className="text-muted-2">Draft</span>}
+                  </Td>
                   <Td>{i.clientName}</Td>
                   <Td>
                     <EditableInvoiceDate

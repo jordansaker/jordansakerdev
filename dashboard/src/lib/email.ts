@@ -6,6 +6,7 @@ import { invoices, quotes } from "@/db/schema";
 import { renderInvoicePdf } from "./pdf/invoice-pdf";
 import { getInvoiceById, getQuoteById } from "./queries";
 import { formatCents } from "./money";
+import { publishInvoiceNumber } from "./invoice-number";
 import { getSettings } from "./settings";
 
 function resend() {
@@ -21,6 +22,9 @@ function fromAddress() {
 export async function sendInvoiceEmail(
   invoiceId: number,
 ): Promise<{ ok: boolean; error?: string }> {
+  // Sending an invoice publishes it — assign a number if it doesn't have one yet.
+  await publishInvoiceNumber(invoiceId);
+
   const invoice = await getInvoiceById(invoiceId);
   if (!invoice) return { ok: false, error: "Invoice not found" };
   if (!invoice.client?.email) {

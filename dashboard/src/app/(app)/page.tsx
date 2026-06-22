@@ -71,7 +71,9 @@ export default async function OverviewPage() {
               <tbody>
                 {recent.map((i) => (
                   <tr key={i.id} className="hover:bg-surface-2 transition-colors">
-                    <Td className="mono whitespace-nowrap">{i.number}</Td>
+                    <Td className="mono whitespace-nowrap">
+                    {i.number ?? <span className="text-muted-2">Draft</span>}
+                  </Td>
                     <Td>{i.clientName}</Td>
                     <Td className="mono text-muted whitespace-nowrap">{i.issueDate}</Td>
                     <Td>

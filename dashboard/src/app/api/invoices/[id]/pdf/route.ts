@@ -42,7 +42,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${invoice.number}.pdf"`,
+      "Content-Disposition": `inline; filename="${invoice.number ?? `draft-${invoice.id}`}.pdf"`,
       "Cache-Control": "private, no-store",
     },
   });

@@ -33,7 +33,7 @@ type Output = z.output<typeof QuoteFormSchema>;
 
 export type SaveQuoteResult =
   | { ok: true; kind: "quote"; id: number; number: string }
-  | { ok: true; kind: "invoice"; id: number; number: string }
+  | { ok: true; kind: "invoice"; id: number; number: string | null }
   | { ok: false; error: string };
 
 export async function saveQuoteAction(input: Input): Promise<SaveQuoteResult> {
@@ -47,16 +47,9 @@ export async function saveQuoteAction(input: Input): Promise<SaveQuoteResult> {
 
   if (data.asInvoice) {
     const result = await db.transaction(async (tx) => {
-      const [{ invoiceSeq }] = await tx
-        .update(settings)
-        .set({ invoiceSeq: sql`${settings.invoiceSeq} + 1` })
-        .where(eq(settings.id, 1))
-        .returning({ invoiceSeq: settings.invoiceSeq });
-      const number = `INV-${String(invoiceSeq).padStart(4, "0")}`;
       const [inv] = await tx
         .insert(invoices)
         .values({
-          number,
           clientId: data.clientId,
           issueDate: today,
           status: "draft",
@@ -142,16 +135,9 @@ export async function convertQuoteToInvoiceAction(formData: FormData) {
     .where(eq(quoteLines.quoteId, id));
 
   const result = await db.transaction(async (tx) => {
-    const [{ invoiceSeq }] = await tx
-      .update(settings)
-      .set({ invoiceSeq: sql`${settings.invoiceSeq} + 1` })
-      .where(eq(settings.id, 1))
-      .returning({ invoiceSeq: settings.invoiceSeq });
-    const number = `INV-${String(invoiceSeq).padStart(4, "0")}`;
     const [inv] = await tx
       .insert(invoices)
       .values({
-        number,
         clientId: q.clientId,
         issueDate: new Date().toISOString().slice(0, 10),
         status: "draft",

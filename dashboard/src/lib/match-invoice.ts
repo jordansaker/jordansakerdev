@@ -9,7 +9,7 @@ const DATE_WINDOW_DAYS = 21;
 
 export type InvoiceMatch = {
   invoiceId: number;
-  number: string;
+  number: string | null;
   clientName: string;
   issueDate: string;
   totalCents: number;
@@ -38,7 +38,7 @@ export async function matchInvoice(
     .innerJoin(clients, eq(clients.id, invoices.clientId))
     .where(
       and(
-        sql`${invoices.status} IN ('sent', 'overdue', 'draft')`,
+        sql`${invoices.status} IN ('sent', 'overdue')`,
         sql`${invoices.issueDate} BETWEEN ${txDate}::date - ${DATE_WINDOW_DAYS} AND ${txDate}::date + ${DATE_WINDOW_DAYS}`,
       ),
     )

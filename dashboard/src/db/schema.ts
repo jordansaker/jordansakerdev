@@ -83,7 +83,7 @@ export const quoteLines = pgTable("quote_lines", {
 
 export const invoices = pgTable("invoices", {
   id: serial().primaryKey(),
-  number: text().notNull().unique(),
+  number: text().unique(),
   clientId: integer()
     .notNull()
     .references(() => clients.id, { onDelete: "restrict" }),

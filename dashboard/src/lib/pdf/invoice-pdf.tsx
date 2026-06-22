@@ -148,7 +148,7 @@ export type InvoicePdfData = {
   settings: Settings;
   client: Client | null;
   invoice: {
-    number: string;
+    number: string | null;
     issueDate: string;
     dueDate?: string | null;
     gstRegistered: boolean;
@@ -175,9 +175,12 @@ function PdfBody({ data }: { data: InvoicePdfData }) {
     : 0;
   const totalCents = subtotalCents + gstCents;
 
+  const numberDisplay = data.invoice.number ?? "DRAFT";
+  const heading = data.invoice.number ? "TAX INVOICE" : "DRAFT INVOICE";
+
   return (
     <Document
-      title={`Tax invoice ${data.invoice.number}`}
+      title={`Tax invoice ${numberDisplay}`}
       author={data.settings.legalName}
     >
       <Page size="A4" style={styles.page}>
@@ -189,8 +192,8 @@ function PdfBody({ data }: { data: InvoicePdfData }) {
             <Text style={styles.metaLine}>{data.settings.businessEmail}</Text>
           </View>
           <View>
-            <Text style={styles.taxInvoice}>TAX INVOICE</Text>
-            <Text style={styles.invNumber}>{data.invoice.number}</Text>
+            <Text style={styles.taxInvoice}>{heading}</Text>
+            <Text style={styles.invNumber}>{numberDisplay}</Text>
             <Text style={[styles.invNumber, { marginTop: 2 }]}>
               Issued {data.invoice.issueDate}
             </Text>
@@ -255,7 +258,7 @@ function PdfBody({ data }: { data: InvoicePdfData }) {
           <Text style={styles.paymentLabel}>Payment</Text>
           <Text>{data.settings.paymentInstructions}</Text>
           <Text style={[styles.metaLine, { marginTop: 6 }]}>
-            Please reference {data.invoice.number} with your payment.
+            Please reference {numberDisplay} with your payment.
           </Text>
         </View>
 

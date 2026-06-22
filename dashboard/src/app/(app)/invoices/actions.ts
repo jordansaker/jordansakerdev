@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { invoiceStatus, invoices } from "@/db/schema";
+import { publishInvoiceNumber } from "@/lib/invoice-number";
 
 const order = invoiceStatus.enumValues;
 
@@ -34,12 +35,18 @@ export async function cycleInvoiceStatusAction(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return;
   const [row] = await db
-    .select({ status: invoices.status })
+    .select({ status: invoices.status, number: invoices.number })
     .from(invoices)
     .where(eq(invoices.id, id))
     .limit(1);
   if (!row) return;
   const next = order[(order.indexOf(row.status) + 1) % order.length];
+
+  // Assign a number on the first transition out of draft.
+  if (row.status === "draft" && next !== "draft" && !row.number) {
+    await publishInvoiceNumber(id);
+  }
+
   const update: { status: typeof next; paidAt?: Date | null } = { status: next };
   if (next === "paid") update.paidAt = new Date();
   if (next === "draft") update.paidAt = null;
