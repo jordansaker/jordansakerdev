@@ -29,13 +29,13 @@ export function StatementUploadForm({
       <div className="flex flex-col sm:flex-row sm:items-end gap-3">
         <div className="flex-1 min-w-0">
           <label className="block mono text-[0.66rem] tracking-[0.1em] uppercase text-muted mb-1.5">
-            NAB statement PDF
+            NAB transactions CSV
           </label>
           <input
             ref={inputRef}
             type="file"
-            name="pdf"
-            accept="application/pdf"
+            name="csv"
+            accept=".csv,text/csv"
             required
             className="block w-full text-[0.85rem] text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:bg-accent-soft file:text-accent file:font-semibold file:text-[0.78rem] cursor-pointer"
           />
@@ -49,8 +49,8 @@ export function StatementUploadForm({
         </button>
       </div>
       <p className="text-[0.72rem] text-muted-2 mt-2 leading-relaxed">
-        Parsed entirely on your server — no external API calls, no data leaves the box.
-        Nothing is imported until you review and confirm.
+        Export from NAB Internet Banking: Transactions → Export → CSV. Parsed
+        locally; nothing is imported until you review and confirm.
       </p>
       {error ? <p className="text-red text-sm mt-2">{error}</p> : null}
     </form>

@@ -1,5 +1,4 @@
 import "server-only";
-import { extractText, getDocumentProxy } from "unpdf";
 
 export type ParsedTransaction = {
   date: string; // YYYY-MM-DD
@@ -19,196 +18,219 @@ export type ParsedStatement = {
   transactions: ParsedTransaction[];
 };
 
-const MONTHS: Record<string, number> = {
-  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+/**
+ * Minimal RFC-4180-ish CSV parser. Handles quoted fields with embedded commas
+ * and doubled-quote escapes ("she said ""hi"""). Returns rows as string arrays.
+ */
+function parseCsv(text: string): string[][] {
+  // Strip UTF-8 BOM if present
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let i = 0;
+  let inQuotes = false;
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      field += c;
+      i++;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      i++;
+      continue;
+    }
+    if (c === ",") {
+      row.push(field);
+      field = "";
+      i++;
+      continue;
+    }
+    if (c === "\r") {
+      // peek for \n — let \n branch handle the row push to avoid double-push
+      if (text[i + 1] === "\n") {
+        i++;
+        continue;
+      }
+      // bare \r as row terminator
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+      i++;
+      continue;
+    }
+    if (c === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+      i++;
+      continue;
+    }
+    field += c;
+    i++;
+  }
+  if (field.length || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
+}
+
+const HEADER_HINTS = {
+  date: ["date", "transaction date", "txn date", "posting date"],
+  amount: ["amount", "value", "debit/credit", "transaction amount"],
+  description: ["description", "narration", "details", "transaction details", "particulars"],
+  balance: ["balance", "running balance", "account balance"],
 };
 
-function toCents(s: string): number {
-  return Math.round(Number(s.replace(/,/g, "")) * 100);
-}
+type ColumnMap = { date: number; amount: number; description: number; balance: number };
 
-function isoDate(day: number, month: number, year: number): string {
-  const d = new Date(Date.UTC(year, month, day));
-  return d.toISOString().slice(0, 10);
-}
-
-export async function extractPdfText(buffer: Buffer): Promise<string> {
-  const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const result = await extractText(pdf, { mergePages: true });
-  return Array.isArray(result.text) ? result.text.join("\n") : result.text;
-}
-
-/**
- * Extracts statement period start/end. NAB statements typically show something
- * like "Statement period 01 Mar 2026 to 31 Mar 2026" or "from 01/03/2026 to 31/03/2026".
- */
-function findPeriod(text: string): { start: string | null; end: string | null } {
-  // "1 Mar 2026 to 31 Mar 2026" or "1 Mar 2026 - 31 Mar 2026"
-  const m1 = text.match(
-    /(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})\s*(?:to|-|–|—)\s*(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/,
-  );
-  if (m1) {
-    const sm = MONTHS[m1[2].toLowerCase()];
-    const em = MONTHS[m1[5].toLowerCase()];
-    if (sm !== undefined && em !== undefined) {
-      return {
-        start: isoDate(Number(m1[1]), sm, Number(m1[3])),
-        end: isoDate(Number(m1[4]), em, Number(m1[6])),
-      };
-    }
-  }
-  // "01/03/2026 to 31/03/2026" (Australian DD/MM/YYYY)
-  const m2 = text.match(
-    /(\d{1,2})\/(\d{1,2})\/(\d{4})\s*(?:to|-|–|—)\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/,
-  );
-  if (m2) {
-    return {
-      start: isoDate(Number(m2[1]), Number(m2[2]) - 1, Number(m2[3])),
-      end: isoDate(Number(m2[4]), Number(m2[5]) - 1, Number(m2[6])),
-    };
-  }
-  return { start: null, end: null };
-}
-
-function findBsbAndAccount(text: string): {
-  bsb: string | null;
-  account: string | null;
-} {
-  const bsb = text.match(/\b(\d{3}[-\s]?\d{3})\b(?=[^\n]*(?:BSB|bsb))/);
-  const bsbAlt = text.match(/BSB[:\s]+(\d{3}[-\s]?\d{3})/i);
-  const acc = text.match(/Account(?:\s*No)?[:\s]+(\d[\d\s]{4,})/i);
+function detectColumns(header: string[]): ColumnMap | null {
+  const norm = header.map((h) => h.trim().toLowerCase());
+  const find = (hints: string[]) => norm.findIndex((h) => hints.includes(h));
+  const date = find(HEADER_HINTS.date);
+  const amount = find(HEADER_HINTS.amount);
+  const description = find(HEADER_HINTS.description);
+  if (date === -1 || amount === -1 || description === -1) return null;
   return {
-    bsb: (bsbAlt?.[1] ?? bsb?.[1] ?? null)?.replace(/\s+/g, "-") ?? null,
-    account: acc?.[1]?.trim().replace(/\s+/g, " ") ?? null,
+    date,
+    amount,
+    description,
+    balance: find(HEADER_HINTS.balance),
   };
 }
 
-function findBalance(
-  text: string,
-  label: string,
-): number | null {
-  const re = new RegExp(`${label}[^\\n]*?(-?\\d{1,3}(?:,\\d{3})*\\.\\d{2})`, "i");
-  const m = text.match(re);
-  return m ? toCents(m[1]) : null;
+function parseAmount(s: string): number | null {
+  const cleaned = s.replace(/[$,\s]/g, "").trim();
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 100);
 }
 
 /**
- * Transaction row regex — tuned for NAB's flattened PDF text.
- *
- * Captures:
- *   1. Day (1-2 digits)
- *   2. Month abbreviation (3 letters)
- *   3. Rest of line (description + amounts)
- *
- * NAB rows can have 1 amount (with balance) or 2 amounts (debit or credit + balance).
- * After unpdf flattens columns, the cleanest signal is: walk the line right-to-left,
- * the last decimal number is the running balance, anything before it is the
- * transaction amount.
+ * Parse a date string into YYYY-MM-DD. Accepts:
+ *   - DD/MM/YYYY  (NAB Australian)
+ *   - DD/MM/YY    (2-digit year → 2000s)
+ *   - DD-MM-YYYY
+ *   - YYYY-MM-DD  (already ISO)
  */
-const ROW_RE = /^(\d{1,2})\s+([A-Za-z]{3})\s+(.+)$/;
-const AMOUNT_RE = /(-?\d{1,3}(?:,\d{3})*\.\d{2})/g;
-
-function defaultYearFor(month: number, periodStart: string | null): number {
-  if (periodStart) {
-    const py = Number(periodStart.slice(0, 4));
-    const pm = Number(periodStart.slice(5, 7)) - 1;
-    // If month is earlier in the year than period start month, it must be the next calendar year
-    return month < pm ? py + 1 : py;
+function parseDate(s: string): string | null {
+  const t = s.trim();
+  if (!t) return null;
+  let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) {
+    const [, y, mo, d] = m;
+    return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
-  return new Date().getFullYear();
-}
-
-function inferDirectionByKeyword(desc: string): "credit" | "debit" | null {
-  const d = desc.toUpperCase();
-  if (/\b(DEPOSIT|CREDIT|PAYMENT FROM|TRANSFER FROM|REFUND|INTEREST PAID|SALARY)\b/.test(d)) {
-    return "credit";
-  }
-  if (/\b(WITHDRAWAL|DEBIT|EFTPOS|PURCHASE|FEE|CHARGE|BPAY|DIRECT DEBIT|TRANSFER TO|PAYMENT TO)\b/.test(d)) {
-    return "debit";
+  m = t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    const [, d, mo, ys] = m;
+    let year = Number(ys);
+    if (year < 100) year += 2000;
+    return `${year}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
   return null;
 }
 
 export async function parseStatement(buffer: Buffer): Promise<ParsedStatement> {
-  const text = await extractPdfText(buffer);
-  if (text.trim().length < 100) {
-    throw new Error("PDF text extraction produced almost no text — is this a scanned image?");
+  const text = buffer.toString("utf8");
+  if (text.trim().length < 10) {
+    throw new Error("File appears to be empty");
+  }
+  const rows = parseCsv(text);
+  if (!rows.length) {
+    throw new Error("CSV had no rows");
   }
 
-  const { start: periodStart, end: periodEnd } = findPeriod(text);
-  const { bsb, account } = findBsbAndAccount(text);
-  const openingBalanceCents = findBalance(text, "Opening\\s+Balance");
-  const closingBalanceCents = findBalance(text, "Closing\\s+Balance");
+  // Determine if the first row is a header by trying column detection.
+  let cols = detectColumns(rows[0]);
+  let dataRows: string[][];
+  if (cols) {
+    dataRows = rows.slice(1);
+  } else {
+    // No recognisable header — assume NAB default column order: date, amount, description, balance
+    if (rows[0].length < 3) {
+      throw new Error(
+        "Couldn't read column layout. Export the CSV from NAB Internet Banking with default columns (Date, Amount, Description, Balance).",
+      );
+    }
+    cols = { date: 0, amount: 1, description: 2, balance: rows[0].length > 3 ? 3 : -1 };
+    dataRows = rows;
+  }
 
   const transactions: ParsedTransaction[] = [];
-  let prevBalance = openingBalanceCents;
-  const lines = text.split(/\r?\n/);
+  for (const r of dataRows) {
+    const rawDate = r[cols.date];
+    const rawAmount = r[cols.amount];
+    const rawDescription = r[cols.description];
+    if (!rawDate || !rawAmount || !rawDescription) continue;
 
-  for (const raw of lines) {
-    const line = raw.replace(/\s+/g, " ").trim();
-    if (!line) continue;
-    if (/opening\s+balance|closing\s+balance|brought\s+forward|carried\s+forward/i.test(line)) {
-      continue;
-    }
+    const date = parseDate(rawDate);
+    if (!date) continue;
+    const signedAmount = parseAmount(rawAmount);
+    if (signedAmount === null) continue;
 
-    const m = line.match(ROW_RE);
-    if (!m) continue;
-    const month = MONTHS[m[2].toLowerCase()];
-    if (month === undefined) continue;
-    const day = Number(m[1]);
-    if (day < 1 || day > 31) continue;
+    const direction: "credit" | "debit" = signedAmount >= 0 ? "credit" : "debit";
+    const amountCents = Math.abs(signedAmount);
+    if (amountCents === 0) continue;
 
-    const rest = m[3];
-    const amounts = [...rest.matchAll(AMOUNT_RE)].map((x) => x[1]);
-    if (amounts.length === 0) continue;
-
-    // Strip the captured amounts from the rest to get the description
-    let description = rest;
-    for (const a of amounts) description = description.replace(a, "");
-    description = description.replace(/\s+/g, " ").trim();
+    const description = rawDescription.replace(/\s+/g, " ").trim();
     if (!description) continue;
 
-    let amount: number;
-    let balance: number | null = null;
-    if (amounts.length === 1) {
-      amount = toCents(amounts[0]);
-    } else {
-      // Two or more — last is balance, prior is the transaction amount
-      balance = toCents(amounts[amounts.length - 1]);
-      amount = toCents(amounts[amounts.length - 2]);
+    let balanceCents: number | null = null;
+    if (cols.balance >= 0 && r[cols.balance]) {
+      const b = parseAmount(r[cols.balance]);
+      if (b !== null) balanceCents = b;
     }
-    if (amount <= 0) continue;
 
-    let direction: "credit" | "debit" | null = null;
-    if (balance !== null && prevBalance !== null) {
-      // Balance delta tells us direction unambiguously
-      direction = balance >= prevBalance ? "credit" : "debit";
-    }
-    if (direction === null) direction = inferDirectionByKeyword(description);
-    if (direction === null) direction = "debit"; // safe default
-
-    const year = defaultYearFor(month, periodStart);
-    transactions.push({
-      date: isoDate(day, month, year),
-      description,
-      amountCents: amount,
-      direction,
-      balanceCents: balance,
-    });
-
-    if (balance !== null) prevBalance = balance;
+    transactions.push({ date, description, amountCents, direction, balanceCents });
   }
 
   if (!transactions.length) {
     throw new Error(
-      "No transactions matched the NAB row pattern. The statement layout may have changed, or this isn't a NAB statement.",
+      "No transactions parsed from the CSV. Check that it's a NAB transaction export with Date, Amount, and Description columns.",
     );
   }
 
+  // Derive period from min/max transaction date
+  const dates = transactions.map((t) => t.date).sort();
+  const periodStart = dates[0];
+  const periodEnd = dates[dates.length - 1];
+
+  // Opening = (balance of first row) - (amount of first row). Use the first row in CSV order.
+  let openingBalanceCents: number | null = null;
+  let closingBalanceCents: number | null = null;
+  const firstWithBalance = transactions.find((t) => t.balanceCents !== null);
+  if (firstWithBalance && firstWithBalance.balanceCents !== null) {
+    const delta = firstWithBalance.direction === "credit"
+      ? firstWithBalance.amountCents
+      : -firstWithBalance.amountCents;
+    openingBalanceCents = firstWithBalance.balanceCents - delta;
+  }
+  const lastWithBalance = [...transactions].reverse().find((t) => t.balanceCents !== null);
+  if (lastWithBalance && lastWithBalance.balanceCents !== null) {
+    closingBalanceCents = lastWithBalance.balanceCents;
+  }
+
   return {
-    bsb,
-    accountNumber: account,
+    bsb: null,
+    accountNumber: null,
     periodStart,
     periodEnd,
     openingBalanceCents,

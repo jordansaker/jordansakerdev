@@ -8,7 +8,7 @@ import { bankStatements, bankTransactions } from "@/db/schema";
 import { matchInvoice } from "@/lib/match-invoice";
 import { parseStatement } from "@/lib/parse-bank-statement";
 
-const MAX_PDF_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB — CSVs are small
 
 export type UploadResult =
   | { ok: true; statementId: number; transactionCount: number }
@@ -17,15 +17,24 @@ export type UploadResult =
 export async function uploadStatementAction(
   formData: FormData,
 ): Promise<UploadResult> {
-  const file = formData.get("pdf");
+  const file = formData.get("csv");
   if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, error: "Choose a PDF file to upload" };
+    return { ok: false, error: "Choose a CSV file to upload" };
   }
-  if (file.type && !file.type.includes("pdf")) {
-    return { ok: false, error: "File must be a PDF" };
+  if (
+    file.type &&
+    !file.type.includes("csv") &&
+    !file.type.includes("text") &&
+    !file.type.includes("excel") &&
+    file.type !== ""
+  ) {
+    return { ok: false, error: "File must be a CSV" };
   }
-  if (file.size > MAX_PDF_BYTES) {
-    return { ok: false, error: "PDF exceeds 10MB" };
+  if (!/\.csv$/i.test(file.name)) {
+    return { ok: false, error: "File must have a .csv extension" };
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    return { ok: false, error: "CSV exceeds 5MB" };
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
