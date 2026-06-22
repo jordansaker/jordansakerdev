@@ -11,6 +11,9 @@ import {
 } from "@/lib/quarter";
 import { ExpenseForm } from "./expense-form";
 import { createExpenseAction, deleteExpenseAction } from "./actions";
+import { PendingStatements } from "./pending-statements";
+import { uploadStatementAction } from "./upload-action";
+import { StatementUploadForm } from "./upload-form";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "BAS · Studio" };
@@ -122,6 +125,13 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
           </div>
         )}
       </Panel>
+
+      <div className="mt-5">
+        <Panel title="Import bank statement" meta="Upload a NAB PDF; review before commit">
+          <StatementUploadForm action={uploadStatementAction} />
+          <PendingStatements />
+        </Panel>
+      </div>
 
       <div className="mt-5">
         <Panel title="Expenses this quarter" meta="GST paid → label 1B">
