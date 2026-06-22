@@ -49,8 +49,8 @@ export function StatementUploadForm({
         </button>
       </div>
       <p className="text-[0.72rem] text-muted-2 mt-2 leading-relaxed">
-        PDF text is extracted locally, then sent to Claude for structured extraction (~2¢
-        per statement). Nothing is imported until you review and confirm.
+        Parsed entirely on your server — no external API calls, no data leaves the box.
+        Nothing is imported until you review and confirm.
       </p>
       {error ? <p className="text-red text-sm mt-2">{error}</p> : null}
     </form>
