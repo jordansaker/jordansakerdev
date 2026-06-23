@@ -149,6 +149,20 @@ export const emailMessages = pgTable(
   (t) => [uniqueIndex("email_messages_message_id_unique").on(t.messageIdHeader)],
 );
 
+export const audits = pgTable("audits", {
+  id: serial().primaryKey(),
+  client: text().notNull(),
+  url: text().notNull(),
+  score: integer(),
+  fee: text(),
+  findings: text().notNull().default("[]"),
+  scope: text().notNull().default("[]"),
+  recipientEmail: text(),
+  sentAt: timestamp({ withTimezone: true }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export const txDirection = pgEnum("tx_direction", ["credit", "debit"]);
 export const txStatus = pgEnum("tx_status", [
   "pending",
@@ -243,3 +257,5 @@ export type EmailThread = typeof emailThreads.$inferSelect;
 export type EmailMessage = typeof emailMessages.$inferSelect;
 export type BankStatement = typeof bankStatements.$inferSelect;
 export type BankTransaction = typeof bankTransactions.$inferSelect;
+export type Audit = typeof audits.$inferSelect;
+export type AuditFinding = { title: string; paras: string[] };
