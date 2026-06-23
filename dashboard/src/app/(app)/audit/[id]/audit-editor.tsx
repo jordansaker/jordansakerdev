@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/components/confirm";
 import type { AuditFinding } from "@/db/schema";
 import {
   TEMPLATE_LABELS,
@@ -60,18 +61,18 @@ export function AuditEditor({
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
   const [savedOnce, setSavedOnce] = useState(initial.client !== "New audit");
+  const { ask, dialog } = useConfirm();
 
-  function applyTemplate(next: TemplateKey) {
+  async function applyTemplate(next: TemplateKey) {
     const fresh = defaultSectionsFor(next);
     const currentMatchesOldTemplate =
       JSON.stringify(sections) === JSON.stringify(defaultSectionsFor(template));
-    if (
-      !currentMatchesOldTemplate &&
-      !confirm(
+    if (!currentMatchesOldTemplate) {
+      const ok = await ask(
         "Switching templates overwrites every Copy field with the new template's defaults. Continue?",
-      )
-    ) {
-      return;
+        { confirmLabel: "Switch template", danger: true },
+      );
+      if (!ok) return;
     }
     setTemplate(next);
     setSections(fresh);
@@ -187,6 +188,7 @@ export function AuditEditor({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+      {dialog}
       <div className="space-y-5">
         <div className="bg-surface border border-line-soft rounded-2xl p-6">
           <h2 className="font-serif font-medium text-[1.15rem] mb-5">Setup</h2>
@@ -540,18 +542,25 @@ export function AuditEditor({
           {error ? <p className="text-red text-[0.82rem] mt-3">{error}</p> : null}
           {okMsg ? <p className="text-green text-[0.82rem] mt-3">{okMsg}</p> : null}
 
-          <form action={deleteAction} className="mt-5 pt-4 border-t border-line-soft">
-            <input type="hidden" name="id" value={id} />
+          <div className="mt-5 pt-4 border-t border-line-soft">
             <button
-              type="submit"
-              onClick={(e) => {
-                if (!confirm("Delete this audit?")) e.preventDefault();
+              type="button"
+              onClick={async () => {
+                const ok = await ask("Delete this audit?", {
+                  confirmLabel: "Delete",
+                  danger: true,
+                });
+                if (ok) {
+                  const fd = new FormData();
+                  fd.set("id", String(id));
+                  await deleteAction(fd);
+                }
               }}
               className="text-[0.78rem] text-muted-2 hover:text-red transition-colors"
             >
               Delete audit
             </button>
-          </form>
+          </div>
         </div>
       </div>
     </div>

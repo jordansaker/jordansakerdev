@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/components/confirm";
 import type { Service } from "@/db/schema";
 import { formatCents0 } from "@/lib/money";
 import {
@@ -17,9 +18,11 @@ const unitLabel: Record<Service["unit"], string> = {
 
 export function ServicesList({ items }: { items: Service[] }) {
   const [editingId, setEditingId] = useState<number | "new" | null>(null);
+  const { ask, dialog } = useConfirm();
 
   return (
     <>
+      {dialog}
       <div className="flex justify-end mb-4">
         <button
           type="button"
@@ -64,19 +67,24 @@ export function ServicesList({ items }: { items: Service[] }) {
                   >
                     Edit
                   </button>
-                  <form
-                    action={async (fd) => {
-                      if (confirm(`Remove "${s.name}"?`)) await deleteServiceAction(fd);
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (
+                        await ask(`Remove "${s.name}"?`, {
+                          confirmLabel: "Remove",
+                          danger: true,
+                        })
+                      ) {
+                        const fd = new FormData();
+                        fd.set("id", String(s.id));
+                        await deleteServiceAction(fd);
+                      }
                     }}
+                    className="border border-line-soft text-muted rounded-md px-2 py-1 text-[0.72rem] hover:text-red hover:border-red-soft"
                   >
-                    <input type="hidden" name="id" value={s.id} />
-                    <button
-                      type="submit"
-                      className="border border-line-soft text-muted rounded-md px-2 py-1 text-[0.72rem] hover:text-red hover:border-red-soft"
-                    >
-                      Remove
-                    </button>
-                  </form>
+                    Remove
+                  </button>
                 </div>
               </div>
               <div className="text-right shrink-0">

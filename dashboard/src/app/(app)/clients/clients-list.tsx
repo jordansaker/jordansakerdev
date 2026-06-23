@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/components/confirm";
 import type { Client } from "@/db/schema";
 import {
   createClientAction,
@@ -18,9 +19,11 @@ export function ClientsList({
   const [editingId, setEditingId] = useState<number | "new" | null>(
     forceCreate ? "new" : null,
   );
+  const { ask, dialog } = useConfirm();
 
   return (
     <>
+      {dialog}
       <div className="flex justify-end mb-4">
         <button
           type="button"
@@ -75,19 +78,24 @@ export function ClientsList({
                 >
                   Edit
                 </button>
-                <form
-                  action={async (fd) => {
-                    if (confirm(`Remove ${c.name}?`)) await deleteClientAction(fd);
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (
+                      await ask(`Remove ${c.name}?`, {
+                        confirmLabel: "Remove",
+                        danger: true,
+                      })
+                    ) {
+                      const fd = new FormData();
+                      fd.set("id", String(c.id));
+                      await deleteClientAction(fd);
+                    }
                   }}
+                  className="border border-line-soft text-muted rounded-md px-2 py-1 text-[0.72rem] hover:text-red hover:border-red-soft"
                 >
-                  <input type="hidden" name="id" value={c.id} />
-                  <button
-                    type="submit"
-                    className="border border-line-soft text-muted rounded-md px-2 py-1 text-[0.72rem] hover:text-red hover:border-red-soft"
-                  >
-                    Remove
-                  </button>
-                </form>
+                  Remove
+                </button>
               </div>
             </div>
           ),

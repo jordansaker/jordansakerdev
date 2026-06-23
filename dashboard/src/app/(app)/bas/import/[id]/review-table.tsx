@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "@/components/confirm";
 import { Empty, Panel, Td, Th } from "@/components/ui";
 import { formatCents } from "@/lib/money";
 import type { ImportTransaction } from "@/lib/import-queries";
@@ -43,6 +44,7 @@ export function ReviewTable({
   );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const { ask, dialog } = useConfirm();
 
   const summary = useMemo(() => {
     let expensesToCreate = 0;
@@ -97,6 +99,7 @@ export function ReviewTable({
 
   return (
     <>
+      {dialog}
       <Panel
         title="Proposed import"
         meta={`${summary.expensesToCreate} expenses · ${summary.paymentsToConfirm} payments · ${summary.ignored} ignored`}
@@ -206,20 +209,23 @@ export function ReviewTable({
           </span>
         </div>
         <div className="flex gap-2">
-          <form action={discardAction}>
-            <input type="hidden" name="statementId" value={statementId} />
-            <button
-              type="submit"
-              onClick={(e) => {
-                if (!confirm("Discard this statement and all parsed transactions?")) {
-                  e.preventDefault();
-                }
-              }}
-              className="rounded-full border border-line text-muted hover:text-red hover:border-red-soft font-semibold text-[0.88rem] px-4 py-2.5 transition-colors"
-            >
-              Discard
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={async () => {
+              const ok = await ask(
+                "Discard this statement and all parsed transactions?",
+                { confirmLabel: "Discard", danger: true },
+              );
+              if (ok) {
+                const fd = new FormData();
+                fd.set("statementId", String(statementId));
+                await discardAction(fd);
+              }
+            }}
+            className="rounded-full border border-line text-muted hover:text-red hover:border-red-soft font-semibold text-[0.88rem] px-4 py-2.5 transition-colors"
+          >
+            Discard
+          </button>
           <button
             type="button"
             onClick={commit}
