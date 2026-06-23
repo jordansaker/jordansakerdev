@@ -1,13 +1,15 @@
+import { Fragment } from "react";
 import {
   Document,
   Page,
+  Rect,
   StyleSheet,
   Svg,
-  Rect,
   Text,
   View,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import type { AuditSections } from "../audit-templates";
 
 const ACCENT = "#E7743D";
 const INK = "#1C1B19";
@@ -183,6 +185,7 @@ export type AuditPdfData = {
   date?: string;
   score: number | null;
   fee: string | null;
+  sections: AuditSections;
   findings: Array<{ title: string; paras: string[] }>;
   scope: string[];
 };
@@ -204,24 +207,71 @@ function Logo() {
   );
 }
 
+type TokenRender = (key: string) => React.ReactNode | null;
+
+/**
+ * Splits a string on {tokens} and renders each token via the lookup. Strings
+ * outside of token braces are passed through. Unknown tokens render as the
+ * original "{key}" substring so authors notice them in the PDF.
+ */
+function Interpolate({
+  text,
+  render,
+}: {
+  text: string;
+  render: TokenRender;
+}) {
+  if (!text) return null;
+  const parts: React.ReactNode[] = [];
+  const re = /\{(\w+)\}/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const key = m[1];
+    const rendered = render(key);
+    parts.push(rendered ?? `{${key}}`);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return (
+    <>
+      {parts.map((p, i) => (
+        <Fragment key={i}>{p}</Fragment>
+      ))}
+    </>
+  );
+}
+
 export async function renderAuditPdf(data: AuditPdfData): Promise<Buffer> {
   const year = data.date ?? String(new Date().getFullYear());
-  const scoreNode = data.score == null ? (
-    <Text style={styles.token}>[ score ]</Text>
-  ) : (
-    <Text style={styles.strong}>{data.score}</Text>
-  );
-  const feeNode = data.fee == null || data.fee === "" ? (
-    <Text style={styles.token}>[ fee ]</Text>
-  ) : (
-    <Text>{data.fee}</Text>
-  );
+  const s = data.sections;
+
+  const tokenRender: TokenRender = (key) => {
+    switch (key) {
+      case "client":
+        return data.client;
+      case "url":
+        return data.url;
+      case "score":
+        return data.score == null ? (
+          <Text style={styles.token}>[ score ]</Text>
+        ) : (
+          <Text style={styles.strong}>{data.score}</Text>
+        );
+      case "fee":
+        return data.fee == null || data.fee === "" ? (
+          <Text style={styles.token}>[ fee ]</Text>
+        ) : (
+          <Text>{data.fee}</Text>
+        );
+      default:
+        return null;
+    }
+  };
 
   return renderToBuffer(
-    <Document
-      title={`Performance review — ${data.url}`}
-      author="Jordan Saker"
-    >
+    <Document title={`${s.eyebrow} — ${data.url}`} author="Jordan Saker">
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
           <View style={styles.logoBox}>
@@ -232,7 +282,7 @@ export async function renderAuditPdf(data: AuditPdfData): Promise<Buffer> {
             <Text style={styles.brandSub}>Software & site performance</Text>
           </View>
           <View>
-            <Text style={styles.meta}>Performance review</Text>
+            <Text style={styles.meta}>{s.eyebrow}</Text>
             <Text style={styles.meta}>Mareeba, QLD</Text>
             <Text style={styles.meta}>{year}</Text>
           </View>
@@ -240,114 +290,115 @@ export async function renderAuditPdf(data: AuditPdfData): Promise<Buffer> {
 
         <View style={styles.rule} />
 
-        <Text style={styles.eyebrow}>Site performance review</Text>
+        <Text style={styles.eyebrow}>{s.eyebrow}</Text>
         <Text style={styles.h1}>
-          {data.url} — <Text style={styles.h1Accent}>mobile speed</Text>
+          {data.url} —{" "}
+          <Text style={styles.h1Accent}>{s.titleFragment}</Text>
         </Text>
         <Text style={styles.lede}>
-          A no-obligation review of your storefront&apos;s mobile performance.
-          Yours to keep regardless of whether we work together.
+          <Interpolate text={s.lede} render={tokenRender} />
         </Text>
 
-        <View style={styles.callout}>
-          <Text style={[styles.p]}>
-            <Text style={styles.strong}>The situation. </Text>
-            {data.client}&apos;s site is currently loading slowly enough on
-            mobile to <Text style={styles.strong}>fail Google&apos;s Core Web Vitals</Text>
-            {" "}— the real-user speed metric that affects both the buying
-            experience and search visibility. For a store taking orders online,
-            that&apos;s a measurable drag on conversion, especially on phones.
-          </Text>
-          <Text style={[styles.muted, { marginBottom: 0 }]}>
-            The encouraging part: the causes are specific, and none of them
-            require changing your theme, your setup, your apps, or how the site
-            looks. This is optimisation, not a rebuild. A current Google
-            PageSpeed test scores the mobile homepage at {scoreNode}/100.
-          </Text>
-        </View>
+        {s.callout.heading || s.callout.para1 || s.callout.para2 ? (
+          <View style={styles.callout}>
+            {s.callout.para1 ? (
+              <Text style={styles.p}>
+                {s.callout.heading ? (
+                  <Text style={styles.strong}>{s.callout.heading} </Text>
+                ) : null}
+                <Interpolate text={s.callout.para1} render={tokenRender} />
+              </Text>
+            ) : null}
+            {s.callout.para2 ? (
+              <Text style={[styles.muted, { marginBottom: 0 }]}>
+                <Interpolate text={s.callout.para2} render={tokenRender} />
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.secNum}>01</Text>
-          <Text style={styles.h2}>What&apos;s slowing it down</Text>
-          {data.findings.map((f, i) => (
-            <View key={i}>
-              <Text style={styles.h3}>{f.title}</Text>
-              {f.paras.map((p, j) => (
-                <Text key={j} style={[styles.p, styles.muted]}>
-                  {p}
-                </Text>
-              ))}
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.secNum}>02</Text>
-          <Text style={styles.h2}>What I&apos;d do</Text>
-          <Text style={[styles.p, styles.muted]}>
-            A fixed-scope performance pass on the homepage and key templates:
-          </Text>
-          <View>
-            {data.scope.map((s, i) => (
-              <View key={i} style={styles.bulletRow}>
-                <View style={styles.bulletDot} />
-                <Text style={styles.bulletText}>{s}</Text>
+        {data.findings.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.secNum}>01</Text>
+            <Text style={styles.h2}>{s.section1Title}</Text>
+            {data.findings.map((f, i) => (
+              <View key={i}>
+                <Text style={styles.h3}>{f.title}</Text>
+                {f.paras.map((p, j) => (
+                  <Text key={j} style={[styles.p, styles.muted]}>
+                    <Interpolate text={p} render={tokenRender} />
+                  </Text>
+                ))}
               </View>
             ))}
           </View>
-          <Text style={[styles.p, styles.muted, { marginTop: 10 }]}>
-            <Text style={styles.strong}>
-              What stays exactly as it is:
-            </Text>{" "}
-            your theme, your setup, your apps, your checkout, and the entire
-            look and content of the site. Nothing customer-facing changes
-            except the speed. Work is done on an unpublished copy and shared
-            for review before anything goes live — your live store is never
-            touched mid-build.
-          </Text>
-        </View>
+        ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.secNum}>03</Text>
-          <Text style={styles.h2}>Honest expectations</Text>
-          <Text style={[styles.p, styles.muted]}>
-            The lab test score improves as soon as the work ships. Google&apos;s
-            official Core Web Vitals status — the one in Search Console — is
-            based on a rolling ~28-day window of real visitor data, so the
-            &quot;passing&quot; status follows about a month later. The fix is
-            immediate; Google&apos;s confirmation lags.
-          </Text>
-          <Text style={[styles.p, styles.muted]}>
-            I commit to a <Text style={styles.strong}>target</Text> — passing
-            Core Web Vitals and a materially better mobile score — rather than
-            a precise final number, confirmed on the working copy rather than
-            over-promised here.
-          </Text>
-        </View>
+        {data.scope.length > 0 || s.section2Intro || s.section2Outro ? (
+          <View style={styles.section}>
+            <Text style={styles.secNum}>02</Text>
+            <Text style={styles.h2}>{s.section2Title}</Text>
+            {s.section2Intro ? (
+              <Text style={[styles.p, styles.muted]}>
+                <Interpolate text={s.section2Intro} render={tokenRender} />
+              </Text>
+            ) : null}
+            {data.scope.length > 0 ? (
+              <View>
+                {data.scope.map((item, i) => (
+                  <View key={i} style={styles.bulletRow}>
+                    <View style={styles.bulletDot} />
+                    <Text style={styles.bulletText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            {s.section2Outro ? (
+              <Text style={[styles.p, styles.muted, { marginTop: 10 }]}>
+                <Interpolate text={s.section2Outro} render={tokenRender} />
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+
+        {s.section3Paras.some((p) => p) ? (
+          <View style={styles.section}>
+            <Text style={styles.secNum}>03</Text>
+            <Text style={styles.h2}>{s.section3Title}</Text>
+            {s.section3Paras
+              .filter((p) => p)
+              .map((p, i) => (
+                <Text key={i} style={[styles.p, styles.muted]}>
+                  <Interpolate text={p} render={tokenRender} />
+                </Text>
+              ))}
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.secNum}>04</Text>
-          <Text style={styles.h2}>Commercials</Text>
+          <Text style={styles.h2}>{s.section4Title}</Text>
           <View style={styles.priceBox}>
-            <Text style={styles.priceLabel}>
-              Fixed-scope optimisation project
+            <Text style={styles.priceLabel}>{s.priceLabel}</Text>
+            <Text style={styles.priceFig}>
+              $<Interpolate text="{fee}" render={tokenRender} />
             </Text>
-            <Text style={styles.priceFig}>${feeNode}</Text>
-            <Text style={[styles.muted, { marginBottom: 0 }]}>
-              A defined piece of work with a clear before/after — not an
-              open-ended engagement. Optional ongoing maintenance available
-              separately at a monthly rate, but not required.
-            </Text>
+            {s.priceFootnote ? (
+              <Text style={[styles.muted, { marginBottom: 0 }]}>
+                <Interpolate text={s.priceFootnote} render={tokenRender} />
+              </Text>
+            ) : null}
           </View>
         </View>
 
-        <Text style={styles.signoff}>
-          Happy to walk through any of this on a call, or send the full
-          PageSpeed report it&apos;s based on. No obligation either way. — Jordan
-        </Text>
+        {s.signoff ? (
+          <Text style={styles.signoff}>
+            <Interpolate text={s.signoff} render={tokenRender} />
+          </Text>
+        ) : null}
 
         <View style={styles.footer} fixed>
-          <Text>Jordan Saker · Performance review · {data.url}</Text>
+          <Text>Jordan Saker · {s.eyebrow} · {data.url}</Text>
           <Text
             render={({ pageNumber, totalPages }) =>
               `${pageNumber} / ${totalPages}`

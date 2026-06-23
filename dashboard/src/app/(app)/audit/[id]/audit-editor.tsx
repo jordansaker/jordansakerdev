@@ -2,11 +2,19 @@
 
 import { useState, useTransition } from "react";
 import type { AuditFinding } from "@/db/schema";
+import {
+  TEMPLATE_LABELS,
+  defaultSectionsFor,
+  type AuditSections,
+  type TemplateKey,
+} from "@/lib/audit-templates";
 import type { SaveAuditInput } from "../actions";
 
 type Initial = {
   client: string;
   url: string;
+  template: TemplateKey;
+  sections: AuditSections;
   score: string;
   fee: string;
   findings: AuditFinding[];
@@ -36,6 +44,8 @@ export function AuditEditor({
 }) {
   const [client, setClient] = useState(initial.client);
   const [url, setUrl] = useState(initial.url);
+  const [template, setTemplate] = useState<TemplateKey>(initial.template);
+  const [sections, setSections] = useState<AuditSections>(initial.sections);
   const [score, setScore] = useState(initial.score);
   const [fee, setFee] = useState(initial.fee);
   const [findings, setFindings] = useState<AuditFinding[]>(
@@ -43,6 +53,7 @@ export function AuditEditor({
   );
   const [scopeText, setScopeText] = useState(initial.scope.join("\n"));
   const [recipientEmail, setRecipientEmail] = useState(initial.recipientEmail);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const [saving, startSaving] = useTransition();
   const [sending, startSending] = useTransition();
@@ -50,11 +61,59 @@ export function AuditEditor({
   const [okMsg, setOkMsg] = useState<string | null>(null);
   const [savedOnce, setSavedOnce] = useState(initial.client !== "New audit");
 
+  function applyTemplate(next: TemplateKey) {
+    const fresh = defaultSectionsFor(next);
+    const currentMatchesOldTemplate =
+      JSON.stringify(sections) === JSON.stringify(defaultSectionsFor(template));
+    if (
+      !currentMatchesOldTemplate &&
+      !confirm(
+        "Switching templates overwrites every Copy field with the new template's defaults. Continue?",
+      )
+    ) {
+      return;
+    }
+    setTemplate(next);
+    setSections(fresh);
+  }
+
+  function patchSection<K extends keyof AuditSections>(
+    key: K,
+    value: AuditSections[K],
+  ) {
+    setSections((s) => ({ ...s, [key]: value }));
+  }
+
+  function patchCallout(field: "heading" | "para1" | "para2", value: string) {
+    setSections((s) => ({ ...s, callout: { ...s.callout, [field]: value } }));
+  }
+
+  function patchSection3Para(idx: number, value: string) {
+    setSections((s) => {
+      const next = [...s.section3Paras];
+      next[idx] = value;
+      return { ...s, section3Paras: next };
+    });
+  }
+
+  function addSection3Para() {
+    setSections((s) => ({ ...s, section3Paras: [...s.section3Paras, ""] }));
+  }
+
+  function removeSection3Para(idx: number) {
+    setSections((s) => ({
+      ...s,
+      section3Paras: s.section3Paras.filter((_, i) => i !== idx),
+    }));
+  }
+
   function buildInput(): SaveAuditInput {
     return {
       client: client.trim() || "Client",
       url: url.trim() || "example.com",
-      score: score,
+      template,
+      sections,
+      score,
       fee: fee.trim(),
       findings: findings
         .map((f) => ({
@@ -92,7 +151,6 @@ export function AuditEditor({
       return;
     }
     startSending(async () => {
-      // Save first to ensure the latest content is on the PDF
       const saveResult = await saveAction(id, buildInput());
       if (!saveResult.ok) {
         setError(saveResult.error);
@@ -131,8 +189,21 @@ export function AuditEditor({
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
       <div className="space-y-5">
         <div className="bg-surface border border-line-soft rounded-2xl p-6">
-          <h2 className="font-serif font-medium text-[1.15rem] mb-5">Client</h2>
+          <h2 className="font-serif font-medium text-[1.15rem] mb-5">Setup</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Template" full>
+              <select
+                value={template}
+                onChange={(e) => applyTemplate(e.target.value as TemplateKey)}
+                className={inputClass}
+              >
+                {(Object.keys(TEMPLATE_LABELS) as TemplateKey[]).map((k) => (
+                  <option key={k} value={k}>
+                    {TEMPLATE_LABELS[k]}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Client name">
               <input
                 value={client}
@@ -148,7 +219,7 @@ export function AuditEditor({
                 placeholder="example.com.au"
               />
             </Field>
-            <Field label="Mobile score (/100)">
+            <Field label="Audit score (/100)">
               <input
                 type="number"
                 value={score}
@@ -173,7 +244,7 @@ export function AuditEditor({
         <div className="bg-surface border border-line-soft rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-serif font-medium text-[1.15rem]">
-              Findings — what&apos;s slowing it down
+              Findings — what&apos;s wrong
             </h2>
             <button
               type="button"
@@ -235,6 +306,184 @@ export function AuditEditor({
             }
           />
         </div>
+
+        <details
+          className="bg-surface border border-line-soft rounded-2xl"
+          open={copyOpen}
+          onToggle={(e) => setCopyOpen((e.target as HTMLDetailsElement).open)}
+        >
+          <summary className="cursor-pointer px-6 py-5 flex items-center justify-between">
+            <span className="font-serif font-medium text-[1.15rem]">
+              Customise copy
+            </span>
+            <span className="text-[0.78rem] text-muted">
+              Tokens: {"{client} {url} {score} {fee}"}
+            </span>
+          </summary>
+          <div className="px-6 pb-6 pt-2 space-y-5">
+            <Section title="Header + intro">
+              <Field label="Eyebrow (small caps line above the title)">
+                <input
+                  value={sections.eyebrow}
+                  onChange={(e) => patchSection("eyebrow", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Title fragment (the orange part after the URL)">
+                <input
+                  value={sections.titleFragment}
+                  onChange={(e) => patchSection("titleFragment", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Lede paragraph">
+                <textarea
+                  value={sections.lede}
+                  onChange={(e) => patchSection("lede", e.target.value)}
+                  rows={2}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Situation callout">
+              <Field label="Heading (bold lead-in)">
+                <input
+                  value={sections.callout.heading}
+                  onChange={(e) => patchCallout("heading", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Paragraph 1">
+                <textarea
+                  value={sections.callout.para1}
+                  onChange={(e) => patchCallout("para1", e.target.value)}
+                  rows={3}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+              <Field label="Paragraph 2 (often references {score})">
+                <textarea
+                  value={sections.callout.para2}
+                  onChange={(e) => patchCallout("para2", e.target.value)}
+                  rows={3}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Findings section">
+              <Field label="Section heading">
+                <input
+                  value={sections.section1Title}
+                  onChange={(e) => patchSection("section1Title", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Scope section">
+              <Field label="Section heading">
+                <input
+                  value={sections.section2Title}
+                  onChange={(e) => patchSection("section2Title", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Intro line above the bullet list">
+                <textarea
+                  value={sections.section2Intro}
+                  onChange={(e) => patchSection("section2Intro", e.target.value)}
+                  rows={2}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+              <Field label="Outro line below the bullet list">
+                <textarea
+                  value={sections.section2Outro}
+                  onChange={(e) => patchSection("section2Outro", e.target.value)}
+                  rows={3}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Honest expectations">
+              <Field label="Section heading">
+                <input
+                  value={sections.section3Title}
+                  onChange={(e) => patchSection("section3Title", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              {sections.section3Paras.map((p, i) => (
+                <Field key={i} label={`Paragraph ${i + 1}`}>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={p}
+                      onChange={(e) => patchSection3Para(i, e.target.value)}
+                      rows={2}
+                      className={`${inputClass} resize-y`}
+                    />
+                    {sections.section3Paras.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeSection3Para(i)}
+                        className="text-muted-2 hover:text-red"
+                        aria-label="Remove paragraph"
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </div>
+                </Field>
+              ))}
+              <button
+                type="button"
+                onClick={addSection3Para}
+                className="text-[0.82rem] text-muted hover:text-accent transition-colors"
+              >
+                + Add paragraph
+              </button>
+            </Section>
+
+            <Section title="Commercials">
+              <Field label="Section heading">
+                <input
+                  value={sections.section4Title}
+                  onChange={(e) => patchSection("section4Title", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Price box label">
+                <input
+                  value={sections.priceLabel}
+                  onChange={(e) => patchSection("priceLabel", e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Footnote under the price">
+                <textarea
+                  value={sections.priceFootnote}
+                  onChange={(e) => patchSection("priceFootnote", e.target.value)}
+                  rows={3}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Signoff">
+              <Field label="Closing line">
+                <textarea
+                  value={sections.signoff}
+                  onChange={(e) => patchSection("signoff", e.target.value)}
+                  rows={2}
+                  className={`${inputClass} resize-y`}
+                />
+              </Field>
+            </Section>
+          </div>
+        </details>
       </div>
 
       <div className="space-y-4">
@@ -315,16 +564,33 @@ const inputClass =
 function Field({
   label,
   children,
+  full,
 }: {
   label: string;
   children: React.ReactNode;
+  full?: boolean;
 }) {
   return (
-    <div className="mb-3 last:mb-0">
+    <div className={`mb-3 last:mb-0 ${full ? "sm:col-span-2" : ""}`}>
       <label className="block mono text-[0.66rem] tracking-[0.1em] uppercase text-muted mb-1.5">
         {label}
       </label>
       {children}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-bg-2 border border-line-soft rounded-lg p-4">
+      <h3 className="font-serif font-medium text-[1rem] mb-3">{title}</h3>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 }

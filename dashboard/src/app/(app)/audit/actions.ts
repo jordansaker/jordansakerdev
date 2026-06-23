@@ -9,15 +9,43 @@ import { audits } from "@/db/schema";
 import type { AuditFinding } from "@/db/schema";
 import { renderAuditPdf } from "@/lib/pdf/audit-pdf";
 import { renderBrandEmail, renderBrandText } from "@/lib/email-template";
+import {
+  PERFORMANCE_DEFAULTS,
+  defaultSectionsFor,
+  type AuditSections,
+} from "@/lib/audit-templates";
 
 const FindingSchema = z.object({
   title: z.string().trim().min(1),
   paras: z.array(z.string().trim().min(1)),
 });
 
+const SectionsSchema = z.object({
+  eyebrow: z.string(),
+  titleFragment: z.string(),
+  lede: z.string(),
+  callout: z.object({
+    heading: z.string(),
+    para1: z.string(),
+    para2: z.string(),
+  }),
+  section1Title: z.string(),
+  section2Title: z.string(),
+  section2Intro: z.string(),
+  section2Outro: z.string(),
+  section3Title: z.string(),
+  section3Paras: z.array(z.string()),
+  section4Title: z.string(),
+  priceLabel: z.string(),
+  priceFootnote: z.string(),
+  signoff: z.string(),
+});
+
 const AuditFormSchema = z.object({
   client: z.string().trim().min(1, "Client is required"),
   url: z.string().trim().min(1, "URL is required"),
+  template: z.string().trim().default("performance"),
+  sections: SectionsSchema,
   score: z
     .string()
     .optional()
@@ -49,6 +77,8 @@ export async function createAuditAction() {
     .values({
       client: "New audit",
       url: "example.com",
+      template: "performance",
+      sections: JSON.stringify(PERFORMANCE_DEFAULTS),
     })
     .returning({ id: audits.id });
   revalidatePath("/audit");
@@ -70,6 +100,8 @@ export async function updateAuditAction(
     .set({
       client: data.client,
       url: data.url,
+      template: data.template,
+      sections: JSON.stringify(data.sections),
       score: data.score,
       fee: data.fee,
       findings: JSON.stringify(data.findings),
@@ -113,6 +145,10 @@ export async function sendAuditEmailAction(formData: FormData): Promise<{
 
   const findings = safeJson<AuditFinding[]>(row.findings, []);
   const scope = safeJson<string[]>(row.scope, []);
+  const sections = safeJson<AuditSections>(
+    row.sections,
+    defaultSectionsFor(row.template),
+  );
 
   let pdf: Buffer;
   try {
@@ -121,6 +157,7 @@ export async function sendAuditEmailAction(formData: FormData): Promise<{
       url: row.url,
       score: row.score,
       fee: row.fee,
+      sections,
       findings,
       scope,
     });
@@ -137,13 +174,13 @@ export async function sendAuditEmailAction(formData: FormData): Promise<{
     };
   }
 
-  const subject = `Performance review of ${row.url}`;
+  const subject = `${sections.eyebrow} — ${row.url}`;
   const body = [
     `Hi ${row.client},`,
     ``,
-    `Attached is the no-obligation mobile performance review for ${row.url} — yours to keep regardless of whether we work together.`,
+    `Attached is the no-obligation ${sections.eyebrow.toLowerCase()} for ${row.url} — yours to keep regardless of whether we work together.`,
     ``,
-    `Happy to walk through any of it on a call, or send the full PageSpeed report it's based on.`,
+    `Happy to walk through any of it on a call.`,
     ``,
     `Thanks,`,
   ].join("\n");
@@ -166,7 +203,7 @@ export async function sendAuditEmailAction(formData: FormData): Promise<{
       html,
       attachments: [
         {
-          filename: `${safeName}-performance-review.pdf`,
+          filename: `${safeName}-${row.template}-review.pdf`,
           content: pdf,
         },
       ],

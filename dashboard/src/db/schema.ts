@@ -155,6 +155,8 @@ export const audits = pgTable("audits", {
   url: text().notNull(),
   score: integer(),
   fee: text(),
+  template: text().notNull().default("performance"),
+  sections: text().notNull().default("{}"),
   findings: text().notNull().default("[]"),
   scope: text().notNull().default("[]"),
   recipientEmail: text(),

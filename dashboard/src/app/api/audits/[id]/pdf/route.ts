@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { audits } from "@/db/schema";
 import type { AuditFinding } from "@/db/schema";
 import { isAuthenticated } from "@/lib/auth";
+import { defaultSectionsFor, type AuditSections } from "@/lib/audit-templates";
 import { renderAuditPdf } from "@/lib/pdf/audit-pdf";
 
 export const runtime = "nodejs";
@@ -25,12 +26,17 @@ export async function GET(
 
   const findings = safeJson<AuditFinding[]>(row.findings, []);
   const scope = safeJson<string[]>(row.scope, []);
+  const sections = safeJson<AuditSections>(
+    row.sections,
+    defaultSectionsFor(row.template),
+  );
 
   const pdf = await renderAuditPdf({
     client: row.client,
     url: row.url,
     score: row.score,
     fee: row.fee,
+    sections,
     findings,
     scope,
   });
@@ -40,7 +46,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${safeName}-performance-review.pdf"`,
+      "Content-Disposition": `inline; filename="${safeName}-${row.template}-review.pdf"`,
       "Cache-Control": "private, no-store",
     },
   });

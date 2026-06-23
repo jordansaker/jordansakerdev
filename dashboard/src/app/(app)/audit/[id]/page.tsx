@@ -5,6 +5,11 @@ import { PageHead } from "@/components/ui";
 import { db } from "@/db";
 import { audits } from "@/db/schema";
 import type { AuditFinding } from "@/db/schema";
+import {
+  defaultSectionsFor,
+  type AuditSections,
+  type TemplateKey,
+} from "@/lib/audit-templates";
 import { AuditEditor } from "./audit-editor";
 import {
   deleteAuditAction,
@@ -40,6 +45,11 @@ export default async function AuditEditorPage({ params }: { params: Params }) {
   const initial = {
     client: row.client,
     url: row.url,
+    template: row.template as TemplateKey,
+    sections: safeJson<AuditSections>(
+      row.sections,
+      defaultSectionsFor(row.template),
+    ),
     score: row.score?.toString() ?? "",
     fee: row.fee ?? "",
     findings: safeJson<AuditFinding[]>(row.findings, []),
