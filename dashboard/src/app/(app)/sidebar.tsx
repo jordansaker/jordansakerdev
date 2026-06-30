@@ -18,6 +18,16 @@ const items = [
     ),
   },
   {
+    href: "/follow-ups",
+    label: "Follow-ups",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+    ),
+  },
+  {
     href: "/services",
     label: "Services & Pricing",
     icon: (
@@ -28,13 +38,12 @@ const items = [
   },
   {
     href: "/clients",
-    label: "Clients",
+    label: "Pipeline",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="9" cy="8" r="3.5" />
-        <path d="M3 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5" />
-        <path d="M16 11.5a3 3 0 100-6" />
-        <path d="M21 18.5c0-2.4-2-4.5-4.5-4.5" />
+        <rect x="3" y="5" width="4" height="14" rx="1" />
+        <rect x="10" y="5" width="4" height="10" rx="1" />
+        <rect x="17" y="5" width="4" height="6" rx="1" />
       </svg>
     ),
   },

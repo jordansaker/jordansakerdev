@@ -139,6 +139,91 @@
   .empty{padding:40px;text-align:center;color:var(--muted-2);font-size:.9rem}
   .hidden{display:none}
   .note{font-size:.78rem;color:var(--muted-2);margin-top:14px;line-height:1.5}
+
+  /* PIPELINE */
+  .pl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px}
+  @media(max-width:780px){.pl-stats{grid-template-columns:1fr}}
+  .board{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;scrollbar-width:thin}
+  .pl-col{flex:0 0 222px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:14px;padding:12px;min-height:240px;transition:all .15s}
+  .pl-col.drag-over{background:var(--surface);border-color:var(--accent-soft)}
+  .pl-col-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 14px}
+  .pl-col-head .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.84rem}
+  .pl-col-head .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .pl-col-head .meta{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted-2);white-space:nowrap}
+  .lead-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:11px;padding:13px 14px;margin-bottom:10px;cursor:grab;transition:all .15s}
+  .lead-card:hover{border-color:var(--line);transform:translateY(-1px)}
+  .lead-card:active{cursor:grabbing}
+  .lead-card .nm{font-weight:600;font-size:.9rem;margin-bottom:5px;line-height:1.3}
+  .lead-card .vl{font-family:'Fraunces',serif;color:var(--accent);font-size:1.12rem;font-weight:440}
+  .lead-card .src{font-size:.68rem;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace}
+  .lead-card .mv{display:flex;gap:6px;margin-top:11px;opacity:0;transition:opacity .15s}
+  .lead-card:hover .mv{opacity:1}
+  .lead-card .mv button{flex:1;background:var(--bg-2);border:1px solid var(--line-soft);color:var(--muted);border-radius:6px;padding:4px;font-size:.7rem;transition:all .15s}
+  .lead-card .mv button:hover:not([disabled]){color:var(--text);border-color:var(--line)}
+  .add-lead-btn{background:none;border:1px dashed var(--line-soft);color:var(--muted-2);border-radius:9px;padding:10px;width:100%;font-size:.8rem;transition:all .15s}
+  .add-lead-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .card-meta{margin-top:9px;display:flex;flex-direction:column;gap:5px}
+  .fu-badge{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--amber);background:var(--amber-soft);padding:3px 8px;border-radius:999px;align-self:flex-start}
+  .fu-badge.over{color:var(--red);background:var(--red-soft)}
+  .last-c{font-size:.66rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+  /* DRAWER */
+  .overlay{position:fixed;inset:0;background:rgba(8,7,6,.6);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:200}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:430px;max-width:92vw;background:var(--bg-2);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:201;display:flex;flex-direction:column;overflow:hidden}
+  .drawer.open{transform:translateX(0)}
+  .dw-head{padding:24px 26px 20px;border-bottom:1px solid var(--line-soft)}
+  .dw-head .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .dw-head h2{font-family:'Fraunces',serif;font-weight:440;font-size:1.45rem;line-height:1.1}
+  .dw-close{background:none;border:1px solid var(--line-soft);color:var(--muted);border-radius:8px;width:30px;height:30px;font-size:1rem;flex-shrink:0;transition:all .2s}
+  .dw-close:hover{color:var(--text);border-color:var(--line)}
+  .dw-sub{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .dw-val{font-family:'Fraunces',serif;color:var(--accent);font-size:1.2rem}
+  .dw-meta-row{display:flex;gap:20px;margin-top:14px;flex-wrap:wrap}
+  .dw-meta-row .m .k{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)}
+  .dw-meta-row .m .vv{font-size:.86rem;margin-top:3px}
+  .dw-body{flex:1;overflow-y:auto;padding:22px 26px}
+  .dw-body h3{font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+  .timeline{position:relative;padding-left:24px}
+  .timeline::before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:1px;background:var(--line-soft)}
+  .tl-item{position:relative;margin-bottom:20px}
+  .tl-item::before{content:"";position:absolute;left:-24px;top:3px;width:15px;height:15px;border-radius:50%;background:var(--bg-2);border:2px solid var(--ic);box-sizing:border-box}
+  .tl-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .tl-type{font-family:'JetBrains Mono',monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ic);font-weight:600}
+  .tl-date{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted-2)}
+  .tl-note{font-size:.88rem;color:var(--text);line-height:1.5}
+  .tl-fu{display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.64rem;background:var(--amber-soft);color:var(--amber);padding:4px 9px;border-radius:999px}
+  .tl-fu.over{background:var(--red-soft);color:var(--red)}
+  .tl-fu button{background:none;border:none;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;opacity:.85}
+  .dw-form{border-top:1px solid var(--line-soft);padding:18px 26px;background:var(--surface)}
+  .dw-form .types{display:flex;gap:6px;margin-bottom:10px}
+  .dw-form .types button{flex:1;background:var(--bg-2);border:1px solid var(--line-soft);color:var(--muted);border-radius:8px;padding:7px;font-size:.74rem;font-family:'JetBrains Mono',monospace;transition:all .15s}
+  .dw-form .types button.sel{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent)}
+  .dw-form textarea{width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:.88rem;resize:vertical;min-height:54px}
+  .dw-form textarea:focus{outline:none;border-color:var(--accent)}
+  .dw-form .frow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .dw-form .fu-check{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--muted);cursor:pointer}
+  .dw-form input[type=date]{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--text);font-size:.8rem;font-family:'JetBrains Mono',monospace;color-scheme:dark}
+  .dw-empty{color:var(--muted-2);font-size:.85rem;padding:10px 0}
+
+  /* FOLLOW-UPS */
+  .fu-list{display:flex;flex-direction:column;gap:10px}
+  .fu-row{display:grid;grid-template-columns:120px 1fr auto;gap:18px;align-items:center;background:var(--surface);border:1px solid var(--line-soft);border-left:3px solid var(--amber);border-radius:13px;padding:16px 20px;transition:all .15s}
+  .fu-row:hover{background:var(--surface-2);border-color:var(--line);border-left-color:var(--amber)}
+  .fu-row.over{border-left-color:var(--red)}
+  .fu-row.none{border-left-color:var(--muted-2)}
+  .fu-when .rel{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:440;line-height:1.1}
+  .fu-row.over .fu-when .rel{color:var(--red)}
+  .fu-row:not(.over):not(.none) .fu-when .rel{color:var(--amber)}
+  .fu-when .abs{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted-2);margin-top:3px}
+  .fu-name{font-weight:600;font-size:.98rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .fu-stage{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.05em;text-transform:uppercase}
+  .fu-note{color:var(--muted);font-size:.86rem;margin-top:5px;line-height:1.45}
+  .fu-note b{color:var(--text);font-weight:600}
+  .fu-actions{display:flex;gap:8px;flex-shrink:0}
+  .fu-allclear{text-align:center;padding:60px 20px;color:var(--muted)}
+  .fu-allclear .big{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--green);margin-bottom:8px}
+  @media(max-width:680px){.fu-row{grid-template-columns:1fr;gap:10px}.fu-actions{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -146,6 +231,8 @@
   <aside>
     <div class="brand"><span class="monogram">JS</span> Studio</div>
     <button class="nav-item active" data-tab="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Overview</button>
+    <button class="nav-item" data-tab="followups"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Follow-ups</button>
+    <button class="nav-item" data-tab="clients"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> Clients</button>
     <button class="nav-item" data-tab="services"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/></svg> Services & Pricing</button>
     <button class="nav-item" data-tab="quotes"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Quotes</button>
     <button class="nav-item" data-tab="invoices"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Invoices</button>
@@ -163,6 +250,9 @@
   <main id="main"></main>
 </div>
 
+<div id="overlay" class="overlay" onclick="closeDrawer()"></div>
+<aside id="drawer" class="drawer"></aside>
+
 <script>
 /* ---------------- STATE (in-memory demo data) ---------------- */
 const state = {
@@ -177,9 +267,28 @@ const state = {
     {id:'s6', name:'App MVP — Discovery', desc:'Scoping workshop, technical plan, prototype.', price:2500, unit:'fixed'},
   ],
   clients: [
-    {id:'c1', name:'Cairns Coffee Roasters', abn:'21 444 555 666'},
-    {id:'c2', name:'Tableland Tours', abn:'88 123 456 789'},
-    {id:'c3', name:'Reef & Vine Cellars', abn:'45 999 111 222'},
+    {id:'c1', name:'Cairns Coffee Roasters', abn:'21 444 555 666', stage:'delivered', value:3500, source:'Referral', activities:[
+      {id:'a1', date:'2026-05-18', type:'note', note:'Site delivered & invoice paid. Happy — may refer others.', followUp:false},
+    ]},
+    {id:'c2', name:'Tableland Tours', abn:'88 123 456 789', stage:'build', value:8200, source:'Website enquiry', activities:[
+      {id:'a2', date:'2026-05-02', type:'meeting', note:'Kickoff call. Confirmed scope for booking app MVP.', followUp:false},
+    ]},
+    {id:'c3', name:'Reef & Vine Cellars', abn:'45 999 111 222', stage:'quoted', value:4400, source:'Local network', activities:[
+      {id:'a3', date:'2026-05-21', type:'email', note:'Sent quote QT-012 (discovery + booking integration). Awaiting decision.', followUp:true, followUpDate:'2026-05-28'},
+    ]},
+    {id:'c4', name:'Atherton Brewing Co', abn:'', stage:'lead', value:6000, source:'Referral', activities:[
+      {id:'a4', date:'2026-05-20', type:'email', note:'Sent intro email re: website + online ordering. No reply yet.', followUp:true, followUpDate:'2026-05-27'},
+    ]},
+    {id:'c5', name:'Port Douglas Dive', abn:'', stage:'contact', value:3500, source:'Website enquiry', activities:[
+      {id:'a5', date:'2026-05-15', type:'email', note:'Replied to enquiry — keen on a booking system. Asked for a call.', followUp:false},
+      {id:'a6', date:'2026-05-18', type:'call', note:'Phone chat. Scope ~$3.5k. Said to send a quote next week.', followUp:true, followUpDate:'2026-05-25'},
+    ]},
+    {id:'c6', name:'Cassowary Coast Council', abn:'', stage:'lead', value:12000, source:'RFP / tender', activities:[
+      {id:'a7', date:'2026-05-12', type:'email', note:'Submitted RFP response. Awaiting shortlist notification.', followUp:true, followUpDate:'2026-07-05'},
+    ]},
+    {id:'c7', name:'Mareeba Mango Farm', abn:'', stage:'engaged', value:2800, source:'Local network', activities:[
+      {id:'a8', date:'2026-05-19', type:'meeting', note:'Kickoff. Deposit paid, build starting.', followUp:false},
+    ]},
   ],
   invoices: [
     {id:'INV-0007', clientId:'c1', date:'2026-05-18', status:'paid', lines:[{desc:'Business Website (up to 5 pages)', qty:1, price:3500}]},
@@ -218,6 +327,8 @@ function render(){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
   const m=document.getElementById('main');
   if(activeTab==='overview') m.innerHTML=renderOverview();
+  else if(activeTab==='followups') m.innerHTML=renderFollowups();
+  else if(activeTab==='clients') m.innerHTML=renderClients();
   else if(activeTab==='services') m.innerHTML=renderServices();
   else if(activeTab==='quotes') m.innerHTML=renderQuotes();
   else if(activeTab==='invoices') m.innerHTML=renderInvoices();
@@ -361,7 +472,7 @@ function renderInvoices(){
   <div class="panel" style="margin-top:22px;padding:20px 22px">
     <div class="panel-head" style="padding:0 0 14px;border:none"><h2 style="font-size:1.02rem">Every invoice includes — ATO tax invoice fields</h2></div>
     <div class="checklist">
-      ${['The words "Tax invoice"','Your name & ABN — 95 658 646 131','Date of issue & invoice number','Description of each item','GST shown separately (when registered)','Buyer\\'s identity / ABN for $1,000+'].map(t=>`<div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${t}</div>`).join('')}
+      ${['The words "Tax invoice"','Your name & ABN — 95 658 646 131','Date of issue & invoice number','Description of each item','GST shown separately (when registered)','Buyer\'s identity / ABN for $1,000+'].map(t=>`<div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${t}</div>`).join('')}
     </div>
     <p class="note">Reflects ATO requirements for valid tax invoices. Confirm specifics with your accountant — this prototype isn't tax advice.</p>
   </div>`;
@@ -377,7 +488,7 @@ function renderBas(){
   const gstPaid = state.gstRegistered ? exp.reduce((s,e)=>s+e.amount*state.GST_RATE,0) : 0; // treating expense amounts as GST-exclusive base for demo
   const net = gstCollected - gstPaid;
   return `
-  <div class="page-head"><div><h1>BAS</h1><p>GST summary by quarter. ${state.gstRegistered?'':'You\\'re marked as not GST registered — toggle it in the sidebar.'}</p></div></div>
+  <div class="page-head"><div><h1>BAS</h1><p>GST summary by quarter. ${state.gstRegistered?'':'You\'re marked as not GST registered — toggle it in the sidebar.'}</p></div></div>
   <div class="quarter-pick">
     ${QLABELS.map((q,i)=>`<button class="${i===activeQuarter?'active':''}" onclick="setQuarter(${i})">${q}</button>`).join('')}
   </div>
@@ -405,6 +516,163 @@ function renderBas(){
   <p class="note">Simplified illustration of the GST portion of a quarterly BAS. Real BAS may also include PAYG and other obligations — confirm with your accountant.</p>`;
 }
 function setQuarter(i){activeQuarter=i;render();}
+
+/* ---------------- CLIENTS / PIPELINE ---------------- */
+const STAGES=[
+  {id:'lead',     label:'New Lead',        color:'#9A8F80'},
+  {id:'contact',  label:'In Conversation', color:'#7FB2A6'},
+  {id:'quoted',   label:'Quoted',          color:'#D6A95F'},
+  {id:'engaged',  label:'Engaged',         color:'#E8743B'},
+  {id:'build',    label:'In Build',        color:'#6E92C4'},
+  {id:'delivered',label:'Delivered',       color:'#7FB27F'},
+];
+function renderClients(){
+  const active = state.clients.filter(c=>c.stage!=='delivered');
+  const pipeVal = active.reduce((s,c)=>s+(c.value||0),0);
+  const engaged = state.clients.filter(c=>c.stage==='engaged'||c.stage==='build');
+  const engagedVal = engaged.reduce((s,c)=>s+(c.value||0),0);
+  const delivered = state.clients.filter(c=>c.stage==='delivered');
+  return `
+  <div class="page-head"><div><h1>Clients & Pipeline</h1><p>Drag cards between stages, or use the ◂ ▸ buttons. Track every prospect from first contact to delivery.</p></div>
+    <button class="btn btn-primary" onclick="addLead()">+ Add lead</button></div>
+  <div class="pl-stats">
+    <div class="stat"><div class="lbl">Active pipeline</div><div class="val accent">${fmt0(pipeVal)}</div><div class="sub">${active.length} open prospects</div></div>
+    <div class="stat"><div class="lbl">Engaged · in build</div><div class="val">${fmt0(engagedVal)}</div><div class="sub">${engaged.length} won projects</div></div>
+    <div class="stat"><div class="lbl">Delivered</div><div class="val">${delivered.length}</div><div class="sub">completed engagements</div></div>
+  </div>
+  <div class="board">
+    ${STAGES.map(st=>{
+      const cards=state.clients.filter(c=>c.stage===st.id);
+      const sum=cards.reduce((s,c)=>s+(c.value||0),0);
+      return `<div class="pl-col" ondragover="allowDrop(event)" ondragleave="this.classList.remove('drag-over')" ondrop="dropCard(event,'${st.id}')">
+        <div class="pl-col-head"><div class="t"><span class="dot" style="background:${st.color}"></span>${st.label}</div><span class="meta">${cards.length} · ${fmt0(sum)}</span></div>
+        ${cards.map(c=>leadCard(c,st)).join('')}
+        ${st.id==='lead'?`<button class="add-lead-btn" onclick="addLead()">+ Add lead</button>`:''}
+      </div>`;
+    }).join('')}
+  </div>
+  <p class="note">A lightweight CRM. Prospects here can be quoted in the <b>Quotes</b> tab and converted to invoices once won. Pipeline value sums every prospect not yet delivered.</p>`;
+}
+function leadCard(c,st){
+  const idx=STAGES.findIndex(s=>s.id===c.stage);
+  const fu=pendingFollowUp(c); const last=lastContact(c);
+  return `<div class="lead-card" draggable="true" ondragstart="dragStart(event,'${c.id}')" onclick="openClient('${c.id}')" style="border-left:2px solid ${st.color}">
+    <div class="nm">${c.name}</div>
+    ${c.value?`<div class="vl">${fmt0(c.value)}</div>`:''}
+    ${c.source?`<div class="src">${c.source}</div>`:''}
+    <div class="card-meta">
+      ${fu?`<span class="fu-badge ${fu.overdue?'over':''}">${fu.overdue?'⚑ follow-up overdue':'⏳ follow-up '+fu.date}</span>`:''}
+      ${last?`<span class="last-c">last contact ${last}</span>`:'<span class="last-c" style="color:var(--muted-2)">no contact logged</span>'}
+    </div>
+    <div class="mv">
+      <button onclick="event.stopPropagation();moveStage('${c.id}',-1)" ${idx===0?'disabled style="opacity:.3"':''}>◂</button>
+      <button onclick="event.stopPropagation();openClient('${c.id}')">log</button>
+      <button onclick="event.stopPropagation();moveStage('${c.id}',1)" ${idx===STAGES.length-1?'disabled style="opacity:.3"':''}>▸</button>
+    </div>
+  </div>`;
+}
+function lastContact(c){const a=(c.activities||[]).slice().sort((x,y)=>y.date.localeCompare(x.date))[0];return a?a.date:null;}
+function pendingFollowUp(c){
+  const pend=(c.activities||[]).filter(a=>a.followUp&&a.followUpDate);
+  if(!pend.length)return null;
+  pend.sort((x,y)=>x.followUpDate.localeCompare(y.followUpDate));
+  const next=pend[0];const overdue=new Date(next.followUpDate)<new Date(new Date().toDateString());
+  return {date:next.followUpDate,overdue};
+}
+let dragId=null;
+function dragStart(e,id){dragId=id;e.dataTransfer.effectAllowed='move';}
+function allowDrop(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+function dropCard(e,stage){e.preventDefault();e.currentTarget.classList.remove('drag-over');const c=state.clients.find(x=>x.id===dragId);if(c)c.stage=stage;dragId=null;render();}
+function moveStage(id,dir){const c=state.clients.find(x=>x.id===id);const i=STAGES.findIndex(s=>s.id===c.stage);c.stage=STAGES[Math.max(0,Math.min(STAGES.length-1,i+dir))].id;render();}
+function addLead(){const name=prompt('Client / company name:');if(!name)return;const value=parseFloat(prompt('Estimated project value (AUD, optional):','0'))||0;const source=prompt('Source (e.g. Referral, Website enquiry):','')||'';state.clients.push({id:'c'+Date.now(),name,abn:'',stage:'lead',value,source});render();}
+function editLead(id){const c=state.clients.find(x=>x.id===id);const v=parseFloat(prompt('Estimated value (AUD):',c.value||0));if(!isNaN(v))c.value=v;render();}
+
+/* ---- client detail drawer + outreach log ---- */
+const ATYPES={email:{label:'Email',color:'#7FB2A6'},call:{label:'Call',color:'#D6A95F'},meeting:{label:'Meeting',color:'#6E92C4'},note:{label:'Note',color:'#9A8F80'}};
+let openClientId=null, draftType='email', draftFu=false;
+function openClient(id){openClientId=id;draftType='email';draftFu=false;renderDrawer();document.getElementById('drawer').classList.add('open');document.getElementById('overlay').classList.add('open');}
+function closeDrawer(){openClientId=null;document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
+function renderDrawer(){
+  const c=state.clients.find(x=>x.id===openClientId);if(!c)return;
+  const st=STAGES.find(s=>s.id===c.stage)||STAGES[0];
+  const acts=(c.activities||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const today=new Date(new Date().toDateString());
+  document.getElementById('drawer').innerHTML=`
+  <div class="dw-head">
+    <div class="top"><h2>${c.name}</h2><button class="dw-close" onclick="closeDrawer()">✕</button></div>
+    <div class="dw-sub"><span class="tag" style="background:${st.color}22;color:${st.color}">${st.label}</span>${c.value?`<span class="dw-val">${fmt0(c.value)}</span>`:''}</div>
+    <div class="dw-meta-row">
+      <div class="m"><div class="k">Source</div><div class="vv">${c.source||'—'}</div></div>
+      <div class="m"><div class="k">ABN</div><div class="vv mono">${c.abn||'not on file'}</div></div>
+      <div class="m"><div class="k">Last contact</div><div class="vv">${lastContact(c)||'—'}</div></div>
+    </div>
+  </div>
+  <div class="dw-body">
+    <h3>Outreach & activity</h3>
+    ${acts.length?`<div class="timeline">${acts.map(a=>{
+      const t=ATYPES[a.type]||ATYPES.note;
+      const over=a.followUp&&a.followUpDate&&new Date(a.followUpDate)<today;
+      return `<div class="tl-item" style="--ic:${t.color}">
+        <div class="tl-top"><span class="tl-type">${t.label}</span><span class="tl-date">${a.date}</span></div>
+        <div class="tl-note">${a.note}</div>
+        ${a.followUp?`<div class="tl-fu ${over?'over':''}">${over?'⚑ Follow-up overdue':'⏳ Follow-up'}${a.followUpDate?' · '+a.followUpDate:''} <button onclick="clearFollowUp('${c.id}','${a.id}')">mark done</button></div>`:''}
+      </div>`;}).join('')}</div>`:`<div class="dw-empty">No outreach logged yet. Record your first email or call below.</div>`}
+  </div>
+  <div class="dw-form">
+    <div class="types">${Object.keys(ATYPES).map(k=>`<button class="${k===draftType?'sel':''}" onclick="draftType='${k}';renderDrawer()">${ATYPES[k].label}</button>`).join('')}</div>
+    <textarea id="actNote" placeholder="What happened? e.g. Sent intro email, awaiting reply…">${document.getElementById('actNote')?document.getElementById('actNote').value:''}</textarea>
+    <div class="frow">
+      <label class="fu-check" onclick="draftFu=!draftFu;renderDrawer()"><span class="switch ${draftFu?'on':''}" style="width:34px;height:19px"></span> Needs follow-up</label>
+      ${draftFu?`<input type="date" id="actFu" value="${draftFuDate||''}" onchange="draftFuDate=this.value">`:''}
+      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="logActivity('${c.id}')">Log it</button>
+    </div>
+  </div>`;
+}
+let draftFuDate='';
+function logActivity(id){
+  const c=state.clients.find(x=>x.id===id);
+  const note=(document.getElementById('actNote').value||'').trim();
+  if(!note){alert('Add a quick note first.');return;}
+  const a={id:'a'+Date.now(),date:new Date().toISOString().slice(0,10),type:draftType,note,followUp:draftFu};
+  if(draftFu&&draftFuDate)a.followUpDate=draftFuDate;
+  c.activities=c.activities||[];c.activities.push(a);
+  draftType='email';draftFu=false;draftFuDate='';
+  renderDrawer();render();
+}
+function clearFollowUp(cid,aid){const c=state.clients.find(x=>x.id===cid);const a=c.activities.find(x=>x.id===aid);if(a){a.followUp=false;}renderDrawer();render();}
+
+/* ---------------- FOLLOW-UPS (aggregated) ---------------- */
+function dayDiff(dateStr){return Math.round((new Date(dateStr)-new Date(new Date().toDateString()))/86400000);}
+function relLabel(dateStr){if(!dateStr)return{rel:'No date',cls:'none'};const d=dayDiff(dateStr);if(d<0)return{rel:(-d)+(d===-1?' day':' days')+' overdue',cls:'over'};if(d===0)return{rel:'Today',cls:''};if(d===1)return{rel:'Tomorrow',cls:''};return{rel:'In '+d+' days',cls:''};}
+function renderFollowups(){
+  const items=[];
+  state.clients.forEach(c=>(c.activities||[]).forEach(a=>{if(a.followUp)items.push({c,a});}));
+  items.sort((x,y)=>{const dx=x.a.followUpDate||'9999',dy=y.a.followUpDate||'9999';return dx.localeCompare(dy);});
+  const overdue=items.filter(i=>i.a.followUpDate&&dayDiff(i.a.followUpDate)<0).length;
+  const dueToday=items.filter(i=>i.a.followUpDate&&dayDiff(i.a.followUpDate)===0).length;
+  return `
+  <div class="page-head"><div><h1>Follow-ups</h1><p>Every pending chase across your pipeline, soonest first. Your daily "who do I email today" list.</p></div>
+    <button class="btn btn-ghost" onclick="go('clients')">View pipeline</button></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:26px">
+    <div class="stat"><div class="lbl">Overdue</div><div class="val" style="color:var(--red)">${overdue}</div><div class="sub">past their follow-up date</div></div>
+    <div class="stat"><div class="lbl">Due today</div><div class="val" style="color:var(--amber)">${dueToday}</div><div class="sub">chase before end of day</div></div>
+    <div class="stat"><div class="lbl">Total pending</div><div class="val">${items.length}</div><div class="sub">across ${new Set(items.map(i=>i.c.id)).size} clients</div></div>
+  </div>
+  ${items.length?`<div class="fu-list">${items.map(({c,a})=>{
+    const r=relLabel(a.followUpDate);const st=STAGES.find(s=>s.id===c.stage)||STAGES[0];const t=ATYPES[a.type]||ATYPES.note;
+    return `<div class="fu-row ${r.cls}">
+      <div class="fu-when"><div class="rel">${r.rel}</div><div class="abs">${a.followUpDate||'—'}</div></div>
+      <div class="fu-main">
+        <div class="fu-name">${c.name} <span class="fu-stage" style="color:${st.color}">${st.label}</span></div>
+        <div class="fu-note"><b>${t.label}, ${a.date}:</b> ${a.note}</div>
+      </div>
+      <div class="fu-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openClient('${c.id}')">Open</button>
+        <button class="btn btn-primary btn-sm" onclick="clearFollowUp('${c.id}','${a.id}')">Mark done</button>
+      </div>
+    </div>`;}).join('')}</div>`
+  :`<div class="fu-allclear"><div class="big">✓ All caught up</div>No follow-ups pending. Log outreach on a client to set the next chase.</div>`}`;
+}
 
 /* ---------------- NAV ---------------- */
 function go(t){activeTab=t;render();}

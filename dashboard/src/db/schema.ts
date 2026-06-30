@@ -42,6 +42,22 @@ export const services = pgTable(
   },
 );
 
+export const clientStage = pgEnum("client_stage", [
+  "new_lead",
+  "in_conversation",
+  "quoted",
+  "engaged",
+  "in_build",
+  "delivered",
+]);
+
+export const activityType = pgEnum("activity_type", [
+  "email",
+  "call",
+  "meeting",
+  "note",
+]);
+
 export const clients = pgTable(
   "clients",
   {
@@ -51,10 +67,27 @@ export const clients = pgTable(
     email: text(),
     address: text(),
     notes: text(),
+    stage: clientStage().notNull().default("new_lead"),
+    estimatedValueCents: integer(),
+    source: text(),
+    sortOrder: integer().notNull().default(0),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("clients_name_unique").on(sql`lower(${t.name})`)],
 );
+
+export const clientActivities = pgTable("client_activities", {
+  id: serial().primaryKey(),
+  clientId: integer()
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  type: activityType().notNull(),
+  activityDate: date().notNull(),
+  note: text().notNull().default(""),
+  followUpDue: date(),
+  followUpDoneAt: timestamp({ withTimezone: true }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 export const quotes = pgTable("quotes", {
   id: serial().primaryKey(),
@@ -259,5 +292,14 @@ export type EmailThread = typeof emailThreads.$inferSelect;
 export type EmailMessage = typeof emailMessages.$inferSelect;
 export type BankStatement = typeof bankStatements.$inferSelect;
 export type BankTransaction = typeof bankTransactions.$inferSelect;
+export type ClientActivity = typeof clientActivities.$inferSelect;
+export type ClientStage =
+  | "new_lead"
+  | "in_conversation"
+  | "quoted"
+  | "engaged"
+  | "in_build"
+  | "delivered";
+export type ActivityType = "email" | "call" | "meeting" | "note";
 export type Audit = typeof audits.$inferSelect;
 export type AuditFinding = { title: string; paras: string[] };

@@ -1,11 +1,11 @@
 "use server";
 
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { z } from "zod";
 import { db } from "@/db";
-import { emailMessages } from "@/db/schema";
+import { clientActivities, clients, emailMessages } from "@/db/schema";
 import { renderBrandEmail, renderBrandText } from "@/lib/email-template";
 import {
   buildReferences,
@@ -155,6 +155,25 @@ export async function sendEmailAction(formData: FormData): Promise<SendEmailResu
     .returning({ id: emailMessages.id });
 
   await bumpThread(resolvedThreadId);
+
+  // Auto-log on the client pipeline if To matches a known client email
+  if (!resendError) {
+    const [matchedClient] = await db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(sql`lower(${clients.email}) = lower(${to})`)
+      .limit(1);
+    if (matchedClient) {
+      await db.insert(clientActivities).values({
+        clientId: matchedClient.id,
+        type: "email",
+        activityDate: new Date().toISOString().slice(0, 10),
+        note: subject,
+      });
+      revalidatePath("/clients");
+      revalidatePath("/follow-ups");
+    }
+  }
 
   revalidatePath("/mail");
   revalidatePath(`/mail/${resolvedThreadId}`);
