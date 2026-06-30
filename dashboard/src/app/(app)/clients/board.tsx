@@ -335,7 +335,7 @@ function StageColumn({
   stages: ClientStage[];
 }) {
   return (
-    <div className="bg-bg-2 border border-line-soft rounded-2xl flex-shrink-0 w-[280px] sm:w-[300px] flex flex-col max-h-[calc(100vh-280px)]">
+    <div className="bg-bg-2 border border-line-soft rounded-2xl flex-shrink-0 w-[280px] sm:w-[300px] flex flex-col lg:max-h-[calc(100vh-280px)]">
       <div className="px-4 py-3 border-b border-line-soft sticky top-0 bg-bg-2 rounded-t-2xl">
         <div className="flex items-center gap-2 mb-1">
           <span
@@ -357,7 +357,7 @@ function StageColumn({
         items={cards.map((c) => c.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="p-3 space-y-2 overflow-y-auto flex-1" data-stage={stage}>
+        <div className="p-3 space-y-2 lg:overflow-y-auto flex-1" data-stage={stage}>
           {cards.length === 0 ? (
             <DropPlaceholder stage={stage} />
           ) : (
