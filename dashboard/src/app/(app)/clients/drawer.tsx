@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useConfirm } from "@/components/confirm";
 import { formatCents0 } from "@/lib/money";
 import {
   describeRelativeDate,
@@ -63,6 +64,7 @@ export function ClientDrawer({
   const [editDetails, setEditDetails] = useState(false);
   const [pending, startTransition] = useTransition();
   const [logError, setLogError] = useState<string | null>(null);
+  const { ask, dialog } = useConfirm();
   const [logType, setLogType] = useState<ActivityType>("email");
   const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [logNote, setLogNote] = useState("");
@@ -121,6 +123,7 @@ export function ClientDrawer({
       role="dialog"
       aria-modal="true"
     >
+      {dialog}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -349,31 +352,25 @@ export function ClientDrawer({
           </Section>
 
           <Section title="Danger zone">
-            <form
-              action={(fd) =>
+            <button
+              type="button"
+              onClick={async () => {
+                const ok = await ask(
+                  `Delete ${client.name}? All logged activity will be removed.`,
+                  { confirmLabel: "Delete", danger: true },
+                );
+                if (!ok) return;
                 startTransition(async () => {
+                  const fd = new FormData();
+                  fd.set("id", String(client.id));
                   await deleteClientAction(fd);
                   onClose();
-                })
-              }
+                });
+              }}
+              className="text-[0.78rem] text-muted-2 hover:text-red transition-colors"
             >
-              <input type="hidden" name="id" value={client.id} />
-              <button
-                type="submit"
-                onClick={(e) => {
-                  if (
-                    !window.confirm(
-                      `Delete ${client.name}? All logged activity will be removed.`,
-                    )
-                  ) {
-                    e.preventDefault();
-                  }
-                }}
-                className="text-[0.78rem] text-muted-2 hover:text-red transition-colors"
-              >
-                Delete client
-              </button>
-            </form>
+              Delete client
+            </button>
           </Section>
         </div>
       </div>
