@@ -43,6 +43,7 @@ export type PipelineCard = {
   address: string | null;
   notes: string | null;
   sortOrder: number;
+  createdAt: string; // ISO date
   lastContact: { type: ActivityType; date: string } | null;
   activeFollowUp: {
     activityId: number;
@@ -52,6 +53,35 @@ export type PipelineCard = {
     activityDate: string;
   } | null;
 };
+
+/**
+ * Case-insensitive substring match against name / email / source / notes.
+ * Empty query matches everything.
+ */
+export function matchesSearch(card: PipelineCard, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const haystack = [
+    card.name,
+    card.email ?? "",
+    card.source ?? "",
+    card.notes ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(q);
+}
+
+/**
+ * Most-recently-touched first. Falls back to createdAt when there's no logged
+ * activity yet, then to id desc for total stability.
+ */
+export function sortByRecentActivity(a: PipelineCard, b: PipelineCard): number {
+  const aTouch = a.lastContact?.date ?? a.createdAt;
+  const bTouch = b.lastContact?.date ?? b.createdAt;
+  if (aTouch !== bTouch) return aTouch < bTouch ? 1 : -1;
+  return b.id - a.id;
+}
 
 export function describeRelativeDate(iso: string): {
   text: string;

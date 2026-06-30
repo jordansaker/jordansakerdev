@@ -25,11 +25,14 @@ import {
   STAGE_COLOR,
   STAGE_LABEL,
   describeRelativeDate,
+  matchesSearch,
+  sortByRecentActivity,
   type PipelineCard,
 } from "@/lib/crm-client-helpers";
 import type { ClientActivity, ClientStage } from "@/db/schema";
 import { ClientDrawer } from "./drawer";
 import { AddLeadModal } from "./add-lead-modal";
+import { ClientListTable } from "./client-list-table";
 
 type MoveAction = (input: {
   clientId: number;
@@ -82,6 +85,7 @@ export function Board({
   const [optimisticCards, setOptimisticCards] = useState(cards);
   const [, startTransition] = useTransition();
   const [addingLead, setAddingLead] = useState(false);
+  const [query, setQuery] = useState("");
 
   // Keep optimistic state in sync when server re-renders
   useMemo(() => {
@@ -95,15 +99,25 @@ export function Board({
     }),
   );
 
+  const filteredCards = useMemo(
+    () => optimisticCards.filter((c) => matchesSearch(c, query)),
+    [optimisticCards, query],
+  );
+
   const cardsByStage = useMemo(() => {
     const map = new Map<ClientStage, PipelineCard[]>();
     for (const s of stages) map.set(s, []);
-    for (const c of optimisticCards) {
+    for (const c of filteredCards) {
       const list = map.get(c.stage);
       if (list) list.push(c);
     }
     return map;
-  }, [optimisticCards, stages]);
+  }, [filteredCards, stages]);
+
+  const listRows = useMemo(
+    () => [...filteredCards].sort(sortByRecentActivity),
+    [filteredCards],
+  );
 
   function openCard(id: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -207,11 +221,40 @@ export function Board({
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <div className="relative flex-1">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-2 pointer-events-none"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search clients by name, email, source, or notes…"
+            className="w-full bg-bg-2 border border-line rounded-full pl-9 pr-9 py-2 text-[0.9rem] text-text focus:outline-none focus:border-accent"
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-2 hover:text-text text-[1rem]"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={() => setAddingLead(true)}
-          className="rounded-full bg-accent text-bg font-semibold text-[0.88rem] px-4 py-2.5 hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(232,116,59,0.3)] transition-all"
+          className="rounded-full bg-accent text-bg font-semibold text-[0.88rem] px-4 py-2.5 hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(232,116,59,0.3)] transition-all whitespace-nowrap"
         >
           + Add lead
         </button>
@@ -239,6 +282,17 @@ export function Board({
           })}
         </div>
       </DndContext>
+
+      <div className="mt-8">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="font-serif font-medium text-[1.1rem]">All clients</h2>
+          <span className="text-[0.78rem] text-muted-2 mono">
+            {listRows.length}
+            {query ? ` of ${optimisticCards.length}` : ""}
+          </span>
+        </div>
+        <ClientListTable cards={listRows} onOpen={openCard} />
+      </div>
 
       {addingLead ? (
         <AddLeadModal

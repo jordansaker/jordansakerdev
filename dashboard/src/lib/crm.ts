@@ -76,6 +76,7 @@ export async function loadBoard(): Promise<PipelineCard[]> {
       address: r.address,
       notes: r.notes,
       sortOrder: r.sortOrder,
+      createdAt: r.createdAt.toISOString().slice(0, 10),
       lastContact: last,
       activeFollowUp: fu
         ? {
