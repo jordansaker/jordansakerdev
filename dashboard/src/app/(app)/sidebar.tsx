@@ -38,7 +38,7 @@ const items = [
   },
   {
     href: "/clients",
-    label: "Pipeline",
+    label: "Clients",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <rect x="3" y="5" width="4" height="14" rx="1" />
