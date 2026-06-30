@@ -13,7 +13,7 @@ import {
 } from "./actions";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Pipeline · Studio" };
+export const metadata = { title: "Clients · Studio" };
 
 type SP = Promise<{ client?: string }>;
 
@@ -40,7 +40,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: SP }
   return (
     <>
       <PageHead
-        title="Pipeline"
+        title="Clients"
         subtitle="Drag cards between stages. Click any card for the outreach log."
       />
 
