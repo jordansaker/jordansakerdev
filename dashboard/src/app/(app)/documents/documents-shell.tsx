@@ -51,7 +51,7 @@ export function DocumentsShell({
             return (
               <div
                 key={d.id}
-                className={`group flex items-center justify-between gap-2 px-3 py-2.5 rounded-[9px] text-[0.86rem] transition-colors ${
+                className={`group flex items-center justify-between gap-2 px-3 py-3 lg:py-2.5 rounded-[9px] text-[0.9rem] lg:text-[0.86rem] transition-colors ${
                   isActive
                     ? "bg-accent-soft text-accent"
                     : "text-muted hover:bg-surface-2 hover:text-text"
@@ -59,7 +59,7 @@ export function DocumentsShell({
               >
                 <Link
                   href={`/documents?id=${d.id}`}
-                  className="flex-1 truncate"
+                  className="flex-1 truncate py-1 -my-1"
                   title={d.title}
                 >
                   {d.title || "Untitled"}
@@ -78,7 +78,7 @@ export function DocumentsShell({
                     await deleteAction(fd);
                     router.refresh();
                   }}
-                  className="opacity-0 group-hover:opacity-100 text-muted-2 hover:text-red text-base leading-none"
+                  className="shrink-0 w-8 h-8 -mr-1 flex items-center justify-center rounded text-muted-2 hover:text-red lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100 lg:w-6 lg:h-6 leading-none text-base"
                   aria-label={`Delete ${d.title}`}
                 >
                   ×

@@ -64,11 +64,21 @@
   background: #f4eee2;
   color: #20201c;
   min-height: 520px;
-  padding: 44px 54px;
+  padding: 28px 22px;
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.7;
   outline: none;
+}
+@media (min-width: 640px) {
+  .tt-canvas {
+    padding: 36px 36px;
+  }
+}
+@media (min-width: 1024px) {
+  .tt-canvas {
+    padding: 44px 54px;
+  }
 }
 .tt-canvas:focus {
   outline: none;

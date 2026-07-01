@@ -143,9 +143,9 @@ export function DocumentEditor({ doc, title, onTitleChange, saveAction }: Props)
         value={title}
         placeholder="Untitled document"
         onChange={(e) => onTitleChange(e.target.value)}
-        className="w-full bg-transparent border-none text-text font-serif font-medium text-[1.5rem] px-6 pt-5 pb-1.5 outline-none"
+        className="w-full bg-transparent border-none text-text font-serif font-medium text-[1.35rem] sm:text-[1.5rem] px-4 sm:px-6 pt-4 sm:pt-5 pb-1.5 outline-none"
       />
-      <div className="flex flex-wrap gap-1 px-5 py-2.5 border-t border-b border-line-soft sticky top-0 bg-surface z-[5]">
+      <div className="flex flex-wrap gap-1 px-3 sm:px-5 py-2 sm:py-2.5 border-t border-b border-line-soft sticky top-0 bg-surface z-[5]">
         <TbBtn active={isActive("bold")} onClick={() => exec((c) => c.toggleBold())} label="Bold" className="font-extrabold">
           B
         </TbBtn>
@@ -197,7 +197,7 @@ export function DocumentEditor({ doc, title, onTitleChange, saveAction }: Props)
         />
       </div>
       <EditorContent editor={editor} />
-      <div className="flex justify-between items-center px-5 py-3 border-t border-line-soft text-[0.78rem] text-muted">
+      <div className="flex flex-wrap gap-3 justify-between items-center px-4 sm:px-5 py-3 border-t border-line-soft text-[0.78rem] text-muted">
         <span className="font-mono text-[0.72rem]">
           {words} words
           <span className="ml-3 text-muted-2">
@@ -245,7 +245,7 @@ function TbBtn({
       aria-label={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`min-w-8 h-8 px-2 rounded-md inline-flex items-center justify-center text-[0.85rem] transition-colors border ${
+      className={`min-w-9 h-9 sm:min-w-8 sm:h-8 px-2 rounded-md inline-flex items-center justify-center text-[0.95rem] sm:text-[0.85rem] transition-colors border ${
         active
           ? "bg-accent-soft text-accent border-accent-soft"
           : "bg-transparent border-transparent text-muted hover:bg-bg-2 hover:text-text hover:border-line-soft"
