@@ -224,6 +224,59 @@
   .fu-allclear{text-align:center;padding:60px 20px;color:var(--muted)}
   .fu-allclear .big{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--green);margin-bottom:8px}
   @media(max-width:680px){.fu-row{grid-template-columns:1fr;gap:10px}.fu-actions{justify-content:flex-start}}
+
+  /* DOCUMENTS / EDITOR */
+  .te-wrap{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:start}
+  @media(max-width:820px){.te-wrap{grid-template-columns:1fr}}
+  .te-list{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:12px;position:sticky;top:34px}
+  .te-doc{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:9px;color:var(--muted);font-size:.86rem;cursor:pointer;transition:all .15s}
+  .te-doc:hover{background:var(--surface-2);color:var(--text)}
+  .te-doc.active{background:var(--accent-soft);color:var(--accent)}
+  .te-doc .dl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .te-doc .dx{opacity:0;border:none;background:none;color:var(--muted-2);font-size:1rem;transition:all .15s}
+  .te-doc:hover .dx{opacity:1}
+  .te-doc .dx:hover{color:var(--red)}
+  .te-new{background:none;border:1px dashed var(--line-soft);color:var(--muted-2);border-radius:9px;padding:9px;width:100%;font-size:.82rem;margin-top:8px;transition:all .15s}
+  .te-new:hover{border-color:var(--accent);color:var(--accent)}
+  .te-editor{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden}
+  .te-title{width:100%;background:none;border:none;color:var(--text);font-family:'Fraunces',serif;font-weight:440;font-size:1.5rem;padding:20px 26px 6px}
+  .te-title:focus{outline:none}
+  .te-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:10px 20px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:var(--surface);z-index:5}
+  .te-toolbar button{background:none;border:1px solid transparent;color:var(--muted);border-radius:7px;min-width:32px;height:32px;padding:0 9px;font-size:.85rem;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+  .te-toolbar button:hover{background:var(--bg-2);color:var(--text);border-color:var(--line-soft)}
+  .te-toolbar .sep{width:1px;background:var(--line-soft);margin:4px 5px}
+  .te-toolbar .b{font-weight:800}.te-toolbar .i{font-style:italic}.te-toolbar .u{text-decoration:underline}.te-toolbar .s{text-decoration:line-through}
+  .te-canvas{background:#F4EEE2;color:#20201C;min-height:520px;padding:44px 54px;font-family:'Hanken Grotesk',sans-serif;font-size:16px;line-height:1.7;outline:none}
+  .te-canvas:focus{outline:none}
+  .te-canvas h1{font-family:'Fraunces',serif;font-weight:520;font-size:1.9rem;margin:.2em 0 .5em;line-height:1.15}
+  .te-canvas h2{font-family:'Fraunces',serif;font-weight:500;font-size:1.4rem;margin:1.1em 0 .4em}
+  .te-canvas p{margin:.6em 0}
+  .te-canvas ul,.te-canvas ol{margin:.6em 0;padding-left:1.5em}
+  .te-canvas li{margin:.25em 0}
+  .te-canvas blockquote{border-left:3px solid var(--accent);background:rgba(232,116,59,.07);margin:1em 0;padding:.6em 1.1em;color:#4a453c;border-radius:0 8px 8px 0}
+  .te-canvas a{color:#c2551f;text-decoration:underline}
+  .te-canvas img{max-width:100%;border-radius:8px;margin:.6em 0;display:block}
+  .te-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--line-soft);font-size:.78rem;color:var(--muted)}
+  .te-foot .mono{font-size:.72rem}
+
+  /* PRINT / SAVE AS PDF */
+  #printArea{display:none}
+  @media print{
+    body::after{display:none !important}
+    .app,.overlay,.drawer{display:none !important}
+    body{background:#fff}
+    #printArea{display:block !important;color:#111;font-family:'Hanken Grotesk',sans-serif;line-height:1.65;font-size:11.5pt}
+    #printArea h1{font-family:'Fraunces',serif;font-weight:600;font-size:22pt;margin:0 0 .5em;line-height:1.15}
+    #printArea h2{font-family:'Fraunces',serif;font-weight:600;font-size:15pt;margin:1.1em 0 .35em}
+    #printArea p{margin:.55em 0}
+    #printArea ul,#printArea ol{margin:.55em 0;padding-left:1.4em}
+    #printArea li{margin:.2em 0}
+    #printArea blockquote{border-left:2.5pt solid #E8743B;margin:1em 0;padding:.4em 1em;color:#444;background:#faf6f0}
+    #printArea a{color:#c2551f;text-decoration:underline}
+    #printArea img{max-width:100%;display:block;margin:.6em 0;page-break-inside:avoid}
+    #printArea .pa-meta{color:#888;font-size:8.5pt;border-top:1px solid #ddd;margin-top:2.5em;padding-top:8px;font-family:'JetBrains Mono',monospace}
+    @page{margin:20mm 18mm}
+  }
 </style>
 </head>
 <body>
@@ -237,6 +290,7 @@
     <button class="nav-item" data-tab="quotes"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Quotes</button>
     <button class="nav-item" data-tab="invoices"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Invoices</button>
     <button class="nav-item" data-tab="bas"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg> BAS</button>
+    <button class="nav-item" data-tab="docs"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg> Documents</button>
     <div class="nav-sp"></div>
     <div class="gst-toggle">
       Tax settings
@@ -252,6 +306,7 @@
 
 <div id="overlay" class="overlay" onclick="closeDrawer()"></div>
 <aside id="drawer" class="drawer"></aside>
+<div id="printArea"></div>
 
 <script>
 /* ---------------- STATE (in-memory demo data) ---------------- */
@@ -307,6 +362,11 @@ const state = {
     {id:'QT-011', clientId:'c1', date:'2026-05-10', status:'accepted', lines:[{desc:'Business Website (up to 5 pages)', qty:1, price:3500}]},
   ],
   invoiceSeq: 8, quoteSeq: 13,
+  docs: [
+    {id:'d1', title:'Proposal — Tableland Tours', html:`<h1>Website &amp; Booking App Proposal</h1><p>Prepared for <b>Tableland Tours</b> by Jordan Saker.</p><h2>Scope</h2><ul><li>Responsive marketing website</li><li>Online booking with card payments</li><li>Admin dashboard for tour scheduling</li></ul><h2>Timeline</h2><p>Estimated delivery: <b>6–8 weeks</b> from deposit.</p><blockquote>Investment: $8,200 + GST, 30% deposit to commence.</blockquote>`},
+    {id:'d2', title:'Statement of Work — template', html:`<h1>Statement of Work</h1><p>Client: ____________________</p><p>Date: ____________________</p><h2>Deliverables</h2><ol><li>____________________</li><li>____________________</li></ol><h2>Out of scope</h2><p>Anything not listed above is quoted separately.</p>`},
+  ],
+  docSeq: 3,
 };
 
 /* ---------------- HELPERS ---------------- */
@@ -333,6 +393,7 @@ function render(){
   else if(activeTab==='quotes') m.innerHTML=renderQuotes();
   else if(activeTab==='invoices') m.innerHTML=renderInvoices();
   else if(activeTab==='bas') m.innerHTML=renderBas();
+  else if(activeTab==='docs') m.innerHTML=renderDocs();
 }
 
 /* ---------------- OVERVIEW ---------------- */
@@ -672,6 +733,68 @@ function renderFollowups(){
       </div>
     </div>`;}).join('')}</div>`
   :`<div class="fu-allclear"><div class="big">✓ All caught up</div>No follow-ups pending. Log outreach on a client to set the next chase.</div>`}`;
+}
+
+/* ---------------- DOCS / RICH TEXT EDITOR ---------------- */
+let activeDocId=null;
+function renderDocs(){
+  if(!activeDocId||!state.docs.find(d=>d.id===activeDocId)) activeDocId=(state.docs[0]||{}).id;
+  const doc=state.docs.find(d=>d.id===activeDocId);
+  return `
+  <div class="page-head"><div><h1>Documents</h1><p>Draft proposals, statements of work and notes with rich formatting and images.</p></div></div>
+  <div class="te-wrap">
+    <div class="te-list">
+      ${state.docs.map(d=>`<div class="te-doc ${d.id===activeDocId?'active':''}" onclick="selectDoc('${d.id}')">
+        <span class="dl" id="dl-${d.id}">${d.title||'Untitled'}</span>
+        <button class="dx" onclick="event.stopPropagation();deleteDoc('${d.id}')">✕</button>
+      </div>`).join('')}
+      <button class="te-new" onclick="newDoc()">+ New document</button>
+    </div>
+    ${doc?`<div class="te-editor">
+      <input class="te-title" id="teTitle" value="${(doc.title||'').replace(/"/g,'&quot;')}" placeholder="Untitled document" oninput="saveTitle(this.value)">
+      <div class="te-toolbar">
+        <button class="b" onmousedown="event.preventDefault()" onclick="exec('bold')" title="Bold">B</button>
+        <button class="i" onmousedown="event.preventDefault()" onclick="exec('italic')" title="Italic">I</button>
+        <button class="u" onmousedown="event.preventDefault()" onclick="exec('underline')" title="Underline">U</button>
+        <button class="s" onmousedown="event.preventDefault()" onclick="exec('strikeThrough')" title="Strikethrough">S</button>
+        <span class="sep"></span>
+        <button onmousedown="event.preventDefault()" onclick="exec('formatBlock','H1')" title="Heading 1">H1</button>
+        <button onmousedown="event.preventDefault()" onclick="exec('formatBlock','H2')" title="Heading 2">H2</button>
+        <button onmousedown="event.preventDefault()" onclick="exec('formatBlock','P')" title="Body text">¶</button>
+        <button onmousedown="event.preventDefault()" onclick="exec('formatBlock','BLOCKQUOTE')" title="Quote">❝</button>
+        <span class="sep"></span>
+        <button onmousedown="event.preventDefault()" onclick="exec('insertUnorderedList')" title="Bullet list">•</button>
+        <button onmousedown="event.preventDefault()" onclick="exec('insertOrderedList')" title="Numbered list">1.</button>
+        <span class="sep"></span>
+        <button onmousedown="event.preventDefault()" onclick="addLink()" title="Link">🔗</button>
+        <button onmousedown="event.preventDefault()" onclick="document.getElementById('teImg').click()" title="Insert image">🖼</button>
+        <button onmousedown="event.preventDefault()" onclick="exec('removeFormat')" title="Clear formatting">⌫</button>
+        <input type="file" id="teImg" accept="image/*" style="display:none" onchange="insertImage(this)">
+      </div>
+      <div class="te-canvas" id="teCanvas" contenteditable="true" oninput="saveDoc(this)">${doc.html||''}</div>
+      <div class="te-foot"><span id="teWords" class="mono">0 words</span><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="exportDoc()">HTML</button><button class="btn btn-primary btn-sm" onclick="exportPDF()">Save as PDF</button></div></div>
+    </div>`:'<div class="panel"><div class="empty">No document selected. Create one to start.</div></div>'}
+  </div>
+  <p class="note">Editing uses the browser's built-in rich-text engine for this prototype. In a production build you'd swap in an editor framework (TipTap or Lexical) for reliable formatting, image uploads to storage, and clean export.</p>`;
+}
+function curDoc(){return state.docs.find(d=>d.id===activeDocId);}
+function exec(cmd,val){document.execCommand(cmd,false,val||null);const ed=document.getElementById('teCanvas');if(ed){ed.focus();saveDoc(ed);}}
+function saveDoc(el){const d=curDoc();if(d)d.html=el.innerHTML;const w=document.getElementById('teWords');if(w){const t=(el.textContent||'').trim();w.textContent=(t?t.split(/\s+/).length:0)+' words';}}
+function saveTitle(v){const d=curDoc();if(d){d.title=v;const lbl=document.getElementById('dl-'+d.id);if(lbl)lbl.textContent=v||'Untitled';}}
+function selectDoc(id){activeDocId=id;render();}
+function newDoc(){const id='d'+(state.docSeq++);state.docs.push({id,title:'Untitled document',html:'<p></p>'});activeDocId=id;render();setTimeout(()=>{const e=document.getElementById('teCanvas');if(e)e.focus();},50);}
+function deleteDoc(id){if(!confirm('Delete this document?'))return;state.docs=state.docs.filter(d=>d.id!==id);if(activeDocId===id)activeDocId=(state.docs[0]||{}).id;render();}
+function addLink(){const url=prompt('Link URL:','https://');if(url){exec('createLink',url);}}
+function insertImage(input){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const ed=document.getElementById('teCanvas');ed.focus();document.execCommand('insertImage',false,e.target.result);saveDoc(ed);};r.readAsDataURL(f);input.value='';}
+function exportDoc(){const d=curDoc();if(!d)return;const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${d.title}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7}img{max-width:100%}blockquote{border-left:3px solid #E8743B;padding-left:1em;color:#555}</style></head><body>${d.html}</body></html>`;const blob=new Blob([html],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(d.title||'document').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.html';a.click();}
+function exportPDF(){
+  const d=curDoc();if(!d)return;
+  const stamp=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('printArea').innerHTML=`${d.html}<div class="pa-meta">Jordan Saker · ABN 95 658 646 131 · ${stamp}</div>`;
+  const prevTitle=document.title;
+  document.title=(d.title||'document').replace(/[^a-z0-9 ]+/gi,'').trim()||'document';
+  window.print();
+  setTimeout(()=>{document.title=prevTitle;document.getElementById('printArea').innerHTML='';},500);
 }
 
 /* ---------------- NAV ---------------- */
