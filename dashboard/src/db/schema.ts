@@ -256,6 +256,15 @@ export const expenses = pgTable("expenses", {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+export const documents = pgTable("documents", {
+  id: serial().primaryKey(),
+  title: text().notNull().default("Untitled document"),
+  contentJson: text().notNull().default("{}"),
+  contentHtml: text().notNull().default(""),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export const clientsRelations = relations(clients, ({ many }) => ({
   invoices: many(invoices),
   quotes: many(quotes),
@@ -303,3 +312,4 @@ export type ClientStage =
 export type ActivityType = "email" | "call" | "meeting" | "note";
 export type Audit = typeof audits.$inferSelect;
 export type AuditFinding = { title: string; paras: string[] };
+export type Document = typeof documents.$inferSelect;

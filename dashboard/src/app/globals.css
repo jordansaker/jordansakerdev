@@ -58,3 +58,148 @@
 @utility serif {
   font-family: var(--font-serif);
 }
+
+/* ---- TipTap editor ---- */
+.tt-canvas {
+  background: #f4eee2;
+  color: #20201c;
+  min-height: 520px;
+  padding: 44px 54px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  outline: none;
+}
+.tt-canvas:focus {
+  outline: none;
+}
+.tt-canvas h1 {
+  font-family: var(--font-serif);
+  font-weight: 520;
+  font-size: 1.9rem;
+  margin: 0.2em 0 0.5em;
+  line-height: 1.15;
+}
+.tt-canvas h2 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  margin: 1.1em 0 0.4em;
+}
+.tt-canvas p {
+  margin: 0.6em 0;
+}
+.tt-canvas ul,
+.tt-canvas ol {
+  margin: 0.6em 0;
+  padding-left: 1.5em;
+}
+.tt-canvas ul {
+  list-style: disc;
+}
+.tt-canvas ol {
+  list-style: decimal;
+}
+.tt-canvas li {
+  margin: 0.25em 0;
+}
+.tt-canvas blockquote {
+  border-left: 3px solid var(--color-accent);
+  background: rgba(232, 116, 59, 0.07);
+  margin: 1em 0;
+  padding: 0.6em 1.1em;
+  color: #4a453c;
+  border-radius: 0 8px 8px 0;
+}
+.tt-canvas a {
+  color: #c2551f;
+  text-decoration: underline;
+}
+.tt-canvas img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.6em 0;
+  display: block;
+}
+.tt-canvas p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #a89c8b;
+  pointer-events: none;
+  height: 0;
+}
+
+/* ---- Print / Save as PDF ---- */
+#tt-print-area {
+  display: none;
+}
+@media print {
+  body::after {
+    display: none !important;
+  }
+  body > *:not(#tt-print-area) {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  #tt-print-area {
+    display: block !important;
+    color: #111;
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    font-size: 11.5pt;
+  }
+  #tt-print-area h1 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 22pt;
+    margin: 0 0 0.5em;
+    line-height: 1.15;
+  }
+  #tt-print-area h2 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 15pt;
+    margin: 1.1em 0 0.35em;
+  }
+  #tt-print-area p {
+    margin: 0.55em 0;
+  }
+  #tt-print-area ul,
+  #tt-print-area ol {
+    margin: 0.55em 0;
+    padding-left: 1.4em;
+  }
+  #tt-print-area li {
+    margin: 0.2em 0;
+  }
+  #tt-print-area blockquote {
+    border-left: 2.5pt solid #e8743b;
+    margin: 1em 0;
+    padding: 0.4em 1em;
+    color: #444;
+    background: #faf6f0;
+  }
+  #tt-print-area a {
+    color: #c2551f;
+    text-decoration: underline;
+  }
+  #tt-print-area img {
+    max-width: 100%;
+    display: block;
+    margin: 0.6em 0;
+    page-break-inside: avoid;
+  }
+  #tt-print-area .pa-meta {
+    color: #888;
+    font-size: 8.5pt;
+    border-top: 1px solid #ddd;
+    margin-top: 2.5em;
+    padding-top: 8px;
+    font-family: var(--font-mono);
+  }
+  @page {
+    margin: 20mm 18mm;
+  }
+}

@@ -31,7 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${fraunces.variable} ${hanken.variable} ${mono.variable}`}
     >
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        {children}
+        <div id="tt-print-area" />
+      </body>
     </html>
   );
 }
