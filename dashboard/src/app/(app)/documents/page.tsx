@@ -2,6 +2,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { documents } from "@/db/schema";
 import { PageHead } from "@/components/ui";
+import { getSettings } from "@/lib/settings";
 import { DocumentsShell } from "./documents-shell";
 import { createDocumentAction, deleteDocumentAction, saveDocumentAction } from "./actions";
 
@@ -13,14 +14,17 @@ type SP = Promise<{ id?: string }>;
 export default async function DocumentsPage({ searchParams }: { searchParams: SP }) {
   const { id: idParam } = await searchParams;
 
-  const docs = await db
-    .select({
-      id: documents.id,
-      title: documents.title,
-      updatedAt: documents.updatedAt,
-    })
-    .from(documents)
-    .orderBy(desc(documents.updatedAt), asc(documents.id));
+  const [settings, docs] = await Promise.all([
+    getSettings(),
+    db
+      .select({
+        id: documents.id,
+        title: documents.title,
+        updatedAt: documents.updatedAt,
+      })
+      .from(documents)
+      .orderBy(desc(documents.updatedAt), asc(documents.id)),
+  ]);
 
   const requested = idParam ? Number(idParam) : NaN;
   const activeId =
@@ -47,6 +51,12 @@ export default async function DocumentsPage({ searchParams }: { searchParams: SP
       <DocumentsShell
         docs={docs}
         activeDoc={active}
+        brand={{
+          legalName: settings.legalName,
+          abn: settings.abn,
+          email: settings.businessEmail,
+          address: settings.addressLine,
+        }}
         createAction={createDocumentAction}
         saveAction={saveDocumentAction}
         deleteAction={deleteDocumentAction}

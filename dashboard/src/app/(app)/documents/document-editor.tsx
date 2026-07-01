@@ -1,14 +1,19 @@
 "use client";
 
+import { Color } from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
 import type { Document } from "@/db/schema";
+import type { Brand } from "./documents-shell";
 
 type Props = {
   doc: Document;
+  brand: Brand;
   title: string;
   onTitleChange: (v: string) => void;
   saveAction: (input: {
@@ -18,7 +23,19 @@ type Props = {
   }) => Promise<{ ok: true } | { ok: false; error: string }>;
 };
 
-export function DocumentEditor({ doc, title, onTitleChange, saveAction }: Props) {
+const BRAND_SWATCHES: { label: string; value: string }[] = [
+  { label: "Ink", value: "#20201C" },
+  { label: "Orange", value: "#E8743B" },
+  { label: "Teal", value: "#7FB2A6" },
+  { label: "Green", value: "#7FB27F" },
+  { label: "Amber", value: "#D6A95F" },
+  { label: "Red", value: "#D6735F" },
+];
+
+const LOGO_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><rect width='96' height='96' rx='16' fill='%23E8743B'/><text x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Fraunces,Georgia,serif' font-size='44' font-weight='600' fill='%230E0D0B'>JS</text></svg>`;
+const LOGO_DATA_URI = `data:image/svg+xml;utf8,${LOGO_SVG}`;
+
+export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }: Props) {
   const [words, setWords] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,6 +54,9 @@ export function DocumentEditor({ doc, title, onTitleChange, saveAction }: Props)
       }),
       Image.configure({ inline: false, allowBase64: true }),
       Placeholder.configure({ placeholder: "Start writing…" }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
     ],
     content: initialContent,
     immediatelyRender: false,
@@ -86,6 +106,44 @@ export function DocumentEditor({ doc, title, onTitleChange, saveAction }: Props)
       return;
     }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }
+
+  function insertLetterhead() {
+    if (!editor) return;
+    const details = [brand.abn ? `ABN ${brand.abn}` : "", brand.email, brand.address]
+      .filter(Boolean)
+      .join(" · ");
+    editor
+      .chain()
+      .focus("start")
+      .insertContentAt(0, [
+        {
+          type: "image",
+          attrs: { src: LOGO_DATA_URI, alt: `${brand.legalName} logo`, width: 64, height: 64 },
+        },
+        {
+          type: "heading",
+          attrs: { level: 1 },
+          content: [{ type: "text", text: brand.legalName }],
+        },
+        ...(details
+          ? [
+              {
+                type: "paragraph",
+                content: [
+                  {
+                    type: "text",
+                    marks: [{ type: "textStyle", attrs: { color: "#766C5F" } }],
+                    text: details,
+                  },
+                ],
+              },
+            ]
+          : []),
+        { type: "horizontalRule" },
+        { type: "paragraph" },
+      ])
+      .run();
   }
 
   function onImagePicked(e: React.ChangeEvent<HTMLInputElement>) {
@@ -188,6 +246,40 @@ export function DocumentEditor({ doc, title, onTitleChange, saveAction }: Props)
         <TbBtn onClick={() => exec((c) => c.unsetAllMarks().clearNodes())} label="Clear formatting">
           ⌫
         </TbBtn>
+        <Sep />
+        {BRAND_SWATCHES.map((sw) => (
+          <button
+            key={sw.value}
+            type="button"
+            title={`Text colour: ${sw.label}`}
+            aria-label={`Text colour ${sw.label}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => exec((c) => c.setColor(sw.value))}
+            className="w-7 h-7 sm:w-6 sm:h-6 rounded-full border border-line-soft transition-transform hover:scale-110"
+            style={{ background: sw.value }}
+          />
+        ))}
+        <TbBtn
+          onClick={() => exec((c) => c.unsetColor().unsetHighlight())}
+          label="Clear colour"
+        >
+          ⨯
+        </TbBtn>
+        <Sep />
+        <button
+          type="button"
+          title="Insert letterhead"
+          aria-label="Insert letterhead"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={insertLetterhead}
+          className="h-9 sm:h-8 px-3 rounded-md inline-flex items-center gap-1.5 text-[0.8rem] font-medium bg-accent-soft text-accent border border-accent-soft hover:bg-accent hover:text-bg transition-colors"
+        >
+          <span
+            aria-hidden
+            className="inline-block w-3.5 h-3.5 rounded-sm bg-current"
+          />
+          Letterhead
+        </button>
         <input
           ref={fileInput}
           type="file"

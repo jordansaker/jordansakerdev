@@ -9,9 +9,17 @@ import { DocumentEditor } from "./document-editor";
 
 type ListDoc = { id: number; title: string; updatedAt: Date };
 
+export type Brand = {
+  legalName: string;
+  abn: string;
+  email: string;
+  address: string;
+};
+
 type Props = {
   docs: ListDoc[];
   activeDoc: Document | null;
+  brand: Brand;
   createAction: () => Promise<void>;
   saveAction: (input: {
     id: number;
@@ -25,6 +33,7 @@ type Props = {
 export function DocumentsShell({
   docs,
   activeDoc,
+  brand,
   createAction,
   saveAction,
   deleteAction,
@@ -101,6 +110,7 @@ export function DocumentsShell({
         <DocumentEditor
           key={activeDoc.id}
           doc={activeDoc}
+          brand={brand}
           title={titleLocal}
           onTitleChange={(v) => {
             setTitleLocal(v);
