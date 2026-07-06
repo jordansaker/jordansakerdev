@@ -1,4 +1,6 @@
 import { Empty, PageHead, Panel, Th } from "@/components/ui";
+import { SectionTabs } from "@/components/section-tabs";
+import { DOCUMENTS_TABS } from "../documents/tabs";
 import { AuditRows } from "./audit-rows";
 import {
   createAuditAction,
@@ -14,7 +16,7 @@ export default async function AuditListPage() {
   return (
     <>
       <PageHead
-        title="Audits"
+        title="Documents"
         subtitle="Branded performance reviews for prospects. Edit, download, or send via email."
         right={
           <form action={createAuditAction}>
@@ -27,6 +29,7 @@ export default async function AuditListPage() {
           </form>
         }
       />
+      <SectionTabs tabs={DOCUMENTS_TABS} />
 
       <Panel>
         {rows.length === 0 ? (

@@ -2,6 +2,8 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { documents } from "@/db/schema";
 import { PageHead } from "@/components/ui";
+import { SectionTabs } from "@/components/section-tabs";
+import { DOCUMENTS_TABS } from "./tabs";
 import { getSettings } from "@/lib/settings";
 import { DocumentsShell } from "./documents-shell";
 import { createDocumentAction, deleteDocumentAction, saveDocumentAction } from "./actions";
@@ -48,6 +50,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: SP
         title="Documents"
         subtitle="Draft proposals, statements of work and notes with rich formatting and images."
       />
+      <SectionTabs tabs={DOCUMENTS_TABS} />
       <DocumentsShell
         docs={docs}
         activeDoc={active}

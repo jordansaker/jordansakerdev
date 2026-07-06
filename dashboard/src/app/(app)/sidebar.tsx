@@ -50,31 +50,11 @@ const items = [
   {
     href: "/quotes",
     label: "Quotes",
+    activePrefixes: ["/quotes", "/quote-pad"],
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
         <path d="M14 2v6h6M9 13h6M9 17h4" />
-      </svg>
-    ),
-  },
-  {
-    href: "/quote-pad",
-    label: "Quote Pad",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="M8 7h8M8 12h2M12 12h4M8 16h2M12 16h4" />
-      </svg>
-    ),
-  },
-  {
-    href: "/audit",
-    label: "Audits",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-        <path d="M14 2v6h6" />
-        <path d="M8 14l2 2 4-4" />
       </svg>
     ),
   },
@@ -101,6 +81,7 @@ const items = [
   {
     href: "/documents",
     label: "Documents",
+    activePrefixes: ["/documents", "/audit"],
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -142,7 +123,11 @@ export function Sidebar({
       </div>
       <nav className="flex flex-col gap-1.5">
         {items.map((item) => {
-          const isActive = item.href === "/" ? path === "/" : path.startsWith(item.href);
+          const prefixes = ("activePrefixes" in item ? item.activePrefixes : [item.href]) as string[];
+          const isActive =
+            item.href === "/"
+              ? path === "/"
+              : prefixes.some((p) => path === p || path.startsWith(`${p}/`));
           return (
             <Link
               key={item.href}

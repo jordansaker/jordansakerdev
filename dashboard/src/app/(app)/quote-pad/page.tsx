@@ -1,4 +1,7 @@
 import { Inter, Space_Grotesk } from "next/font/google";
+import { PageHead } from "@/components/ui";
+import { SectionTabs } from "@/components/section-tabs";
+import { QUOTES_TABS } from "../quotes/tabs";
 import { QuotePad } from "./quote-pad";
 
 const spaceGrotesk = Space_Grotesk({
@@ -17,8 +20,15 @@ export const metadata = { title: "Quote Pad · Studio" };
 
 export default function QuotePadPage() {
   return (
-    <div className={`${spaceGrotesk.variable} ${inter.variable}`}>
-      <QuotePad />
-    </div>
+    <>
+      <PageHead
+        title="Quotes"
+        subtitle="Scope in. Defensible quote out."
+      />
+      <SectionTabs tabs={QUOTES_TABS} />
+      <div className={`${spaceGrotesk.variable} ${inter.variable}`}>
+        <QuotePad />
+      </div>
+    </>
   );
 }

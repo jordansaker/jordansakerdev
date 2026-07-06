@@ -1,4 +1,6 @@
 import { Empty, PageHead, Panel, Tag, Td, Th } from "@/components/ui";
+import { SectionTabs } from "@/components/section-tabs";
+import { QUOTES_TABS } from "./tabs";
 import { formatCents } from "@/lib/money";
 import { listClients, listQuotes, listServices } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
@@ -28,6 +30,7 @@ export default async function QuotesPage() {
         title="Quotes"
         subtitle="Build a custom project quote from standard services plus one-off items."
       />
+      <SectionTabs tabs={QUOTES_TABS} />
 
       {clients.length === 0 ? (
         <div className="bg-surface border border-line-soft rounded-2xl p-8 text-muted">
