@@ -5,6 +5,7 @@ import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { FontSize } from "@tiptap/extension-text-style/font-size";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
@@ -35,9 +36,15 @@ const BRAND_SWATCHES: { label: string; value: string }[] = [
 const LOGO_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><rect width='96' height='96' rx='16' fill='%23E8743B'/><text x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Fraunces,Georgia,serif' font-size='44' font-weight='600' fill='%230E0D0B'>JS</text></svg>`;
 const LOGO_DATA_URI = `data:image/svg+xml;utf8,${LOGO_SVG}`;
 
+const DEFAULT_FONT_SIZE = 16;
+const MIN_FONT_SIZE = 8;
+const MAX_FONT_SIZE = 96;
+
 export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }: Props) {
   const [words, setWords] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [sizeDraft, setSizeDraft] = useState<string>(String(DEFAULT_FONT_SIZE));
+  const [sizeSynced, setSizeSynced] = useState<number>(DEFAULT_FONT_SIZE);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -55,6 +62,7 @@ export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }:
       Image.configure({ inline: false, allowBase64: true }),
       Placeholder.configure({ placeholder: "Start writing…" }),
       TextStyle,
+      FontSize,
       Color,
       Highlight.configure({ multicolor: true }),
     ],
@@ -194,6 +202,29 @@ export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }:
   const isActive = (name: string, attrs?: Record<string, unknown>) =>
     editor?.isActive(name, attrs) ?? false;
 
+  const currentSize = (() => {
+    const raw = editor?.getAttributes("textStyle").fontSize as string | undefined;
+    const n = raw ? parseInt(raw.replace("px", ""), 10) : NaN;
+    return Number.isFinite(n) ? n : DEFAULT_FONT_SIZE;
+  })();
+
+  if (currentSize !== sizeSynced) {
+    setSizeSynced(currentSize);
+    setSizeDraft(String(currentSize));
+  }
+
+  function applyFontSize(px: number) {
+    if (!editor) return;
+    const clamped = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Math.round(px)));
+    editor.chain().focus().setFontSize(`${clamped}px`).run();
+  }
+
+  function commitSizeDraft() {
+    const n = Number(sizeDraft);
+    if (Number.isFinite(n) && n > 0) applyFontSize(n);
+    else setSizeDraft(String(currentSize));
+  }
+
   return (
     <div className="bg-surface border border-line-soft rounded-2xl overflow-hidden flex flex-col sticky top-16 lg:top-8 h-[calc(100dvh-5rem)] lg:h-[calc(100dvh-4rem)]">
       <input
@@ -229,6 +260,52 @@ export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }:
         <TbBtn active={isActive("blockquote")} onClick={() => exec((c) => c.toggleBlockquote())} label="Quote">
           ❝
         </TbBtn>
+        <Sep />
+        <div
+          className="inline-flex items-center gap-0.5 h-9 sm:h-8 rounded-md border border-line-soft bg-transparent px-0.5"
+          role="group"
+          aria-label="Font size"
+        >
+          <button
+            type="button"
+            title="Decrease font size"
+            aria-label="Decrease font size"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => applyFontSize(currentSize - 1)}
+            className="w-6 h-full grid place-items-center text-muted hover:text-text"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={MIN_FONT_SIZE}
+            max={MAX_FONT_SIZE}
+            step={1}
+            value={sizeDraft}
+            onChange={(e) => setSizeDraft(e.target.value)}
+            onBlur={commitSizeDraft}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitSizeDraft();
+                e.currentTarget.blur();
+              }
+            }}
+            aria-label="Font size in pixels"
+            className="w-9 text-center bg-transparent border-0 outline-none font-mono text-[0.8rem] text-text [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <button
+            type="button"
+            title="Increase font size"
+            aria-label="Increase font size"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => applyFontSize(currentSize + 1)}
+            className="w-6 h-full grid place-items-center text-muted hover:text-text"
+          >
+            +
+          </button>
+        </div>
         <Sep />
         <TbBtn active={isActive("bulletList")} onClick={() => exec((c) => c.toggleBulletList())} label="Bullet list">
           •
