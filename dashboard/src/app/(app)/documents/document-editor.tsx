@@ -195,15 +195,15 @@ export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }:
     editor?.isActive(name, attrs) ?? false;
 
   return (
-    <div className="bg-surface border border-line-soft rounded-2xl overflow-hidden">
+    <div className="bg-surface border border-line-soft rounded-2xl overflow-hidden flex flex-col sticky top-16 lg:top-8 h-[calc(100dvh-5rem)] lg:h-[calc(100dvh-4rem)]">
       <input
         type="text"
         value={title}
         placeholder="Untitled document"
         onChange={(e) => onTitleChange(e.target.value)}
-        className="w-full bg-transparent border-none text-text font-serif font-medium text-[1.35rem] sm:text-[1.5rem] px-4 sm:px-6 pt-4 sm:pt-5 pb-1.5 outline-none"
+        className="w-full flex-none bg-transparent border-none text-text font-serif font-medium text-[1.35rem] sm:text-[1.5rem] px-4 sm:px-6 pt-4 sm:pt-5 pb-1.5 outline-none"
       />
-      <div className="flex flex-wrap gap-1 px-3 sm:px-5 py-2 sm:py-2.5 border-t border-b border-line-soft sticky top-0 bg-surface z-[5]">
+      <div className="flex flex-wrap gap-1 px-3 sm:px-5 py-2 sm:py-2.5 border-t border-b border-line-soft flex-none bg-surface">
         <TbBtn active={isActive("bold")} onClick={() => exec((c) => c.toggleBold())} label="Bold" className="font-extrabold">
           B
         </TbBtn>
@@ -288,8 +288,10 @@ export function DocumentEditor({ doc, brand, title, onTitleChange, saveAction }:
           onChange={onImagePicked}
         />
       </div>
-      <EditorContent editor={editor} />
-      <div className="flex flex-wrap gap-3 justify-between items-center px-4 sm:px-5 py-3 border-t border-line-soft text-[0.78rem] text-muted">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
+      <div className="flex flex-wrap gap-3 justify-between items-center px-4 sm:px-5 py-3 border-t border-line-soft flex-none bg-surface text-[0.78rem] text-muted">
         <span className="font-mono text-[0.72rem]">
           {words} words
           <span className="ml-3 text-muted-2">

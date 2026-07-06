@@ -63,7 +63,7 @@
 .tt-canvas {
   background: #f4eee2;
   color: #20201c;
-  min-height: 520px;
+  min-height: 100%;
   padding: 28px 22px;
   font-family: var(--font-sans);
   font-size: 16px;
