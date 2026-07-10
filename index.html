@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jordan Saker — Software Development</title>
+<meta name="description" content="Jordan Saker — independent software developer in Far North QLD, Australia. Building mobile and web products for founders and small businesses, from first idea to a live app your customers can use.">
+<meta property="og:title" content="Jordan Saker — Software Development">
+<meta property="og:description" content="Independent developer building mobile and web products for founders and small businesses. Based in Mareeba, QLD, working with clients Australia-wide.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jordansakerdev.com">
+<meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="images/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,7 +87,7 @@
   /* ---------- HERO ---------- */
   header{
     min-height:100vh;display:flex;align-items:center;position:relative;
-    padding:120px 0 80px;
+    padding:120px 0 80px;overflow:hidden;
   }
   header::before{
     content:"";position:absolute;top:-10%;right:-10%;
@@ -89,15 +95,17 @@
     background:radial-gradient(circle,var(--accent-soft),transparent 65%);
     pointer-events:none;
   }
-  .hero-tag{display:flex;align-items:center;gap:12px;margin-bottom:34px;opacity:0;animation:rise .8s .1s forwards}
-  .hero-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 0 4px rgba(127,178,166,.18)}
+  .hero-tag{display:flex;align-items:center;gap:12px;margin-bottom:34px;opacity:0;animation:rise .8s .1s forwards;flex-wrap:wrap}
+  .hero-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 0 4px rgba(127,178,166,.18);flex-shrink:0}
   h1{
     font-family:"Fraunces",serif;
     font-weight:340;
-    font-size:clamp(3rem,9vw,6.4rem);
-    line-height:0.98;
-    letter-spacing:-0.02em;
+    font-size:clamp(2.2rem,10vw,6.4rem);
+    line-height:1.02;
+    letter-spacing:-0.025em;
     margin-bottom:30px;
+    overflow-wrap:break-word;
+    word-wrap:break-word;
   }
   h1 .accent{font-style:italic;color:var(--accent)}
   h1 .l1{display:block;opacity:0;animation:rise .9s .2s forwards}
@@ -128,13 +136,17 @@
   .hero-meta .item{display:flex;flex-direction:column;gap:3px}
   .hero-meta .item span:last-child{color:var(--text);font-size:.92rem;font-family:"JetBrains Mono",monospace}
   @media(max-width:720px){
-    header{min-height:auto;padding:110px 0 60px}
+    header{min-height:auto;padding:96px 0 56px}
+    h1{margin-bottom:22px;letter-spacing:-0.03em}
+    .hero-tag{margin-bottom:24px;gap:10px}
+    .hero-tag .mono{font-size:.62rem;letter-spacing:.1em}
+    .lede{font-size:1.02rem;margin-bottom:32px}
     .hero-meta{
       position:static;left:auto;right:auto;bottom:auto;
-      margin-top:48px;padding:0;gap:22px 26px;
+      margin-top:44px;padding:0;gap:18px 22px;
     }
-    .hero-actions{width:100%}
-    .hero-actions .btn{flex:1;justify-content:center;min-width:0}
+    .hero-actions{width:100%;gap:12px}
+    .hero-actions .btn{flex:1;justify-content:center;min-width:0;padding:12px 20px;font-size:.9rem}
   }
 
   /* ---------- SECTION SHELL ---------- */
@@ -420,7 +432,7 @@
       </div>
       <div class="project-visual">
         <img src="images/hecta-dashboard.webp" alt="Hecta dashboard"
-             width="2560" height="1193" loading="lazy" decoding="async"
+             width="1200" height="560" loading="lazy" decoding="async"
              onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=visual-fallback>Hecta preview</div>')">
       </div>
     </div>
