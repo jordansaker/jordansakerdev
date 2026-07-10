@@ -187,6 +187,15 @@
     font-weight:600;color:var(--accent);transition:gap .25s;
   }
   .project-link:hover{gap:15px}
+  .project-note{
+    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+    font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted-2);
+    padding:6px 12px;border:1px solid var(--line);border-radius:999px;
+  }
+  .project-note::before{
+    content:"";width:6px;height:6px;border-radius:50%;background:var(--muted-2);
+  }
   .project-visual{
     position:relative;background:var(--bg);overflow:hidden;
     display:grid;place-items:center;padding:40px;min-height:360px;
@@ -196,7 +205,7 @@
     background:radial-gradient(circle at 70% 30%,var(--accent-soft),transparent 60%);
   }
   .project-visual img{
-    max-width:100%;border-radius:14px;position:relative;z-index:2;
+    max-width:100%;max-height:520px;border-radius:14px;position:relative;z-index:2;
     box-shadow:0 30px 60px rgba(0,0,0,.5);border:1px solid var(--line);
   }
   /* fallback box if image absent */
@@ -349,6 +358,32 @@
       <div class="project-visual">
         <img src="https://jordansakerdev.com/images/feature-graphic.png" alt="GoalQuest feature graphic"
              onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=visual-fallback>GoalQuest preview</div>')">
+      </div>
+    </div>
+    <div class="project reveal">
+      <div class="project-info">
+        <span class="pill">Agtech · Mobile + Web</span>
+        <h3>JM AG</h3>
+        <p>A field-first tool for agronomists — capture scouting observations on the paddock, score them into inspection reports, and manage clients and chemicals from the office.</p>
+        <div class="feat-list">
+          <div class="f">
+            <span class="fi">⌖</span>
+            <div><h4>Map-based observations</h4><p>GPS-tagged notes and photos, pinned to the exact spot in the paddock they came from.</p></div>
+          </div>
+          <div class="f">
+            <span class="fi">✓</span>
+            <div><h4>Scored inspection reports</h4><p>Structured observation scoring rolls up into shareable reports for the grower.</p></div>
+          </div>
+          <div class="f">
+            <span class="fi">⇅</span>
+            <div><h4>Works offline</h4><p>Full capture in the field with no signal — everything syncs the moment you're back online.</p></div>
+          </div>
+        </div>
+        <span class="project-note">Private tool · Built for JM Agronomy</span>
+      </div>
+      <div class="project-visual">
+        <img src="images/jm-ag/map-photos-report-observation.jpg" alt="JM AG map with observation photos"
+             onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=visual-fallback>JM AG preview</div>')">
       </div>
     </div>
   </div>
