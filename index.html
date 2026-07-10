@@ -287,6 +287,7 @@
   .svc-grid.stack{
     display:block;position:relative;
     min-height:360px;padding:32px 0;
+    contain:layout paint style;
   }
   .svc-grid.stack .svc{
     --i:0;--count:5;--card-w:340px;--depth:0;
@@ -578,30 +579,37 @@
     const cards=Array.from(grid.children).filter(el=>el.classList.contains('svc'));
     if(cards.length<2) return;
 
-    grid.classList.add('stack');
+    // Set CSS vars first so a single .stack toggle triggers one style recalc.
+    const total=cards.length;
     cards.forEach((c,i)=>{
       c.style.setProperty('--i',i);
-      c.style.setProperty('--count',cards.length);
+      c.style.setProperty('--count',total);
     });
+    grid.classList.add('stack');
 
+    // Build dots off-DOM in a fragment so we insert once, not per button.
     const dots=document.createElement('div');
     dots.className='stack-dots';
     dots.setAttribute('role','tablist');
     dots.setAttribute('aria-label','Services');
+    const dotFrag=document.createDocumentFragment();
     cards.forEach((_,i)=>{
       const b=document.createElement('button');
       b.type='button';
       b.setAttribute('role','tab');
       b.setAttribute('aria-label',`Show service ${i+1}`);
       b.addEventListener('click',()=>setFront(i));
-      dots.appendChild(b);
+      dotFrag.appendChild(b);
     });
-    grid.after(dots);
+    dots.appendChild(dotFrag);
 
     const hint=document.createElement('div');
     hint.className='stack-hint';
     hint.textContent='Hover the stack · Or hover a card';
-    dots.after(hint);
+
+    const tail=document.createDocumentFragment();
+    tail.append(dots,hint);
+    grid.after(tail);
 
     const mq=window.matchMedia('(max-width:820px)');
     let front=0;
