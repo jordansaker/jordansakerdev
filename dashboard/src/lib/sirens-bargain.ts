@@ -27,6 +27,7 @@ const playerSchema = z.object({
   realms: z.number().int().min(0).max(1000).default(0),
   steals: z.number().int().min(0).max(1000).default(0),
   tributes: z.number().int().min(0).max(1000).default(0),
+  highestRent: z.number().int().min(0).max(100_000).default(0),
 });
 
 export const matchPayloadSchema = z
@@ -180,6 +181,7 @@ export async function ingestMatch(
         realms: p.realms,
         steals: p.steals,
         tributes: p.tributes,
+        highestRent: p.highestRent,
       })),
     );
 
@@ -199,6 +201,7 @@ export async function ingestMatch(
           totalRealms: p.realms,
           totalSteals: p.steals,
           totalTributes: p.tributes,
+          highestRent: p.highestRent,
           lastMatchAt: endedAt,
         })
         .onConflictDoUpdate({
@@ -213,6 +216,7 @@ export async function ingestMatch(
             totalRealms: sql`${sirensPlayers.totalRealms} + ${p.realms}`,
             totalSteals: sql`${sirensPlayers.totalSteals} + ${p.steals}`,
             totalTributes: sql`${sirensPlayers.totalTributes} + ${p.tributes}`,
+            highestRent: sql`GREATEST(${sirensPlayers.highestRent}, ${p.highestRent})`,
             updatedAt: sql`now()`,
           },
         });
@@ -231,6 +235,7 @@ export type LeaderboardEntry = {
   totalRealms: number;
   totalSteals: number;
   totalTributes: number;
+  highestRent: number;
   lastMatchAt: string;
 };
 
@@ -238,7 +243,13 @@ export type MatchListEntry = {
   endedAt: string;
   turns: number;
   winner: string;
-  players: { name: string; realms: number; steals: number; tributes: number }[];
+  players: {
+    name: string;
+    realms: number;
+    steals: number;
+    tributes: number;
+    highestRent: number;
+  }[];
 };
 
 /**
@@ -270,6 +281,7 @@ export async function readMatches(
       realms: sirensMatchPlayers.realms,
       steals: sirensMatchPlayers.steals,
       tributes: sirensMatchPlayers.tributes,
+      highestRent: sirensMatchPlayers.highestRent,
     })
     .from(sirensMatchPlayers)
     .where(sql`${sirensMatchPlayers.matchId} IN ${ids}`);
@@ -282,6 +294,7 @@ export async function readMatches(
       realms: p.realms,
       steals: p.steals,
       tributes: p.tributes,
+      highestRent: p.highestRent,
     });
     byMatch.set(p.matchId, arr);
   }
@@ -318,6 +331,7 @@ export async function readLeaderboard(
     totalRealms: r.totalRealms,
     totalSteals: r.totalSteals,
     totalTributes: r.totalTributes,
+    highestRent: r.highestRent,
     lastMatchAt: r.lastMatchAt.toISOString(),
   }));
 }

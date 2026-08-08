@@ -342,6 +342,7 @@ export const sirensMatchPlayers = pgTable(
     realms: integer().notNull().default(0),
     steals: integer().notNull().default(0),
     tributes: integer().notNull().default(0),
+    highestRent: integer().notNull().default(0),
   },
   (t) => [
     uniqueIndex("sirens_match_players_match_name_unique").on(t.matchId, t.name),
@@ -359,6 +360,7 @@ export const sirensPlayers = pgTable("sirens_players", {
   totalRealms: integer().notNull().default(0),
   totalSteals: integer().notNull().default(0),
   totalTributes: integer().notNull().default(0),
+  highestRent: integer().notNull().default(0),
   lastMatchAt: timestamp({ withTimezone: true }).notNull(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
