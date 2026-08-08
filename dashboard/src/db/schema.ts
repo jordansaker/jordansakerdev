@@ -313,3 +313,63 @@ export type ActivityType = "email" | "call" | "meeting" | "note";
 export type Audit = typeof audits.$inferSelect;
 export type AuditFinding = { title: string; paras: string[] };
 export type Document = typeof documents.$inferSelect;
+
+/* ------------------------------------------------------------------ */
+/* Siren's Bargain — public leaderboard fed by the GitHub Pages game  */
+/* ------------------------------------------------------------------ */
+
+export const sirensResult = pgEnum("sirens_result", ["win", "loss", "draw"]);
+
+export const sirensMatches = pgTable("sirens_matches", {
+  id: serial().primaryKey(),
+  matchId: text().notNull().unique(),
+  mode: text().notNull(),
+  roomCode: text(),
+  endedAt: timestamp({ withTimezone: true }).notNull(),
+  durationSeconds: integer().notNull(),
+  turns: integer().notNull(),
+  winnerPlayerId: text(),
+  ipHash: text(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const sirensMatchPlayers = pgTable(
+  "sirens_match_players",
+  {
+    id: serial().primaryKey(),
+    matchId: integer()
+      .notNull()
+      .references(() => sirensMatches.id, { onDelete: "cascade" }),
+    playerId: text().notNull(),
+    name: text().notNull(),
+    result: sirensResult().notNull(),
+    turnOrder: integer().notNull(),
+    realmsCompleted: integer().notNull().default(0),
+    pearlsBanked: integer().notNull().default(0),
+    cardsStolen: integer().notNull().default(0),
+    tributesCharged: integer().notNull().default(0),
+    sirensRefusalsPlayed: integer().notNull().default(0),
+    ratingBefore: integer().notNull(),
+    ratingAfter: integer().notNull(),
+    ratingDelta: integer().notNull(),
+  },
+  (t) => [
+    uniqueIndex("sirens_match_players_match_player_unique").on(t.matchId, t.playerId),
+  ],
+);
+
+export const sirensPlayers = pgTable("sirens_players", {
+  playerId: text().primaryKey(),
+  name: text().notNull(),
+  rating: integer().notNull(),
+  wins: integer().notNull().default(0),
+  losses: integer().notNull().default(0),
+  draws: integer().notNull().default(0),
+  matches: integer().notNull().default(0),
+  lastMatchAt: timestamp({ withTimezone: true }).notNull(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export type SirensMatch = typeof sirensMatches.$inferSelect;
+export type SirensMatchPlayer = typeof sirensMatchPlayers.$inferSelect;
+export type SirensPlayer = typeof sirensPlayers.$inferSelect;

@@ -8,6 +8,13 @@
       "when": 1781094790654,
       "tag": "0000_bored_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786181063329,
+      "tag": "0001_classy_the_santerians",
+      "breakpoints": true
     }
   ]
 }
