@@ -234,6 +234,66 @@ export type LeaderboardEntry = {
   lastMatchAt: string;
 };
 
+export type MatchListEntry = {
+  endedAt: string;
+  turns: number;
+  winner: string;
+  players: { name: string; realms: number; steals: number; tributes: number }[];
+};
+
+/**
+ * Return matches in the exact shape the game POSTs them (winner, players[]
+ * with name + realms + steals + tributes, endedAt, turns). Newest first.
+ */
+export async function readMatches(
+  opts: { limit?: number } = {},
+): Promise<MatchListEntry[]> {
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+  const matches = await db
+    .select({
+      id: sirensMatches.id,
+      endedAt: sirensMatches.endedAt,
+      turns: sirensMatches.turns,
+      winner: sirensMatches.winnerName,
+    })
+    .from(sirensMatches)
+    .orderBy(sql`${sirensMatches.endedAt} DESC`)
+    .limit(limit);
+
+  if (matches.length === 0) return [];
+
+  const ids = matches.map((m) => m.id);
+  const players = await db
+    .select({
+      matchId: sirensMatchPlayers.matchId,
+      name: sirensMatchPlayers.name,
+      realms: sirensMatchPlayers.realms,
+      steals: sirensMatchPlayers.steals,
+      tributes: sirensMatchPlayers.tributes,
+    })
+    .from(sirensMatchPlayers)
+    .where(sql`${sirensMatchPlayers.matchId} IN ${ids}`);
+
+  const byMatch = new Map<number, MatchListEntry["players"]>();
+  for (const p of players) {
+    const arr = byMatch.get(p.matchId) ?? [];
+    arr.push({
+      name: p.name,
+      realms: p.realms,
+      steals: p.steals,
+      tributes: p.tributes,
+    });
+    byMatch.set(p.matchId, arr);
+  }
+
+  return matches.map((m) => ({
+    endedAt: m.endedAt.toISOString(),
+    turns: m.turns,
+    winner: m.winner,
+    players: byMatch.get(m.id) ?? [],
+  }));
+}
+
 export async function readLeaderboard(
   opts: { limit?: number; minMatches?: number } = {},
 ): Promise<LeaderboardEntry[]> {

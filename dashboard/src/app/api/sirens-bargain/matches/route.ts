@@ -5,6 +5,7 @@ import {
   jsonResponse,
   matchPayloadSchema,
   preflight,
+  readMatches,
   verifySignature,
 } from "@/lib/sirens-bargain";
 
@@ -13,6 +14,25 @@ export const dynamic = "force-dynamic";
 
 export function OPTIONS() {
   return preflight();
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const limit = Number.parseInt(url.searchParams.get("limit") ?? "50", 10);
+  try {
+    const matches = await readMatches({ limit });
+    return jsonResponse(
+      { ok: true, matches },
+      {
+        extraHeaders: {
+          "cache-control": "public, s-maxage=15, stale-while-revalidate=60",
+        },
+      },
+    );
+  } catch (err) {
+    console.error("[sirens-bargain] matches read failed", err);
+    return jsonResponse({ ok: false, error: "Read failed" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
