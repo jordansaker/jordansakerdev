@@ -1,5 +1,5 @@
 {
-  "id": "8953a590-4795-4166-a122-a2d8be97366c",
+  "id": "e0668aac-8620-4c03-9930-257b6d6b2b34",
   "prevId": "0df8cf2f-ec07-4357-bdf3-fca52fa4f838",
   "version": "7",
   "dialect": "postgresql",
@@ -1363,88 +1363,43 @@
           "primaryKey": false,
           "notNull": true
         },
-        "player_id": {
-          "name": "player_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "name": {
           "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "result": {
-          "name": "result",
-          "type": "sirens_result",
-          "typeSchema": "public",
+        "won": {
+          "name": "won",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true
         },
-        "turn_order": {
-          "name": "turn_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "realms_completed": {
-          "name": "realms_completed",
+        "realms": {
+          "name": "realms",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "pearls_banked": {
-          "name": "pearls_banked",
+        "steals": {
+          "name": "steals",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "cards_stolen": {
-          "name": "cards_stolen",
+        "tributes": {
+          "name": "tributes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
-        },
-        "tributes_charged": {
-          "name": "tributes_charged",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "sirens_refusals_played": {
-          "name": "sirens_refusals_played",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "rating_before": {
-          "name": "rating_before",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rating_after": {
-          "name": "rating_after",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rating_delta": {
-          "name": "rating_delta",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {
-        "sirens_match_players_match_player_unique": {
-          "name": "sirens_match_players_match_player_unique",
+        "sirens_match_players_match_name_unique": {
+          "name": "sirens_match_players_match_name_unique",
           "columns": [
             {
               "expression": "match_id",
@@ -1453,7 +1408,7 @@
               "nulls": "last"
             },
             {
-              "expression": "player_id",
+              "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1502,27 +1457,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "mode": {
-          "name": "mode",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "room_code": {
-          "name": "room_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "ended_at": {
           "name": "ended_at",
           "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "duration_seconds": {
-          "name": "duration_seconds",
-          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -1532,11 +1469,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "winner_player_id": {
-          "name": "winner_player_id",
+        "winner_name": {
+          "name": "winner_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "ip_hash": {
           "name": "ip_hash",
@@ -1572,8 +1509,8 @@
       "name": "sirens_players",
       "schema": "",
       "columns": {
-        "player_id": {
-          "name": "player_id",
+        "name_key": {
+          "name": "name_key",
           "type": "text",
           "primaryKey": true,
           "notNull": true
@@ -1581,12 +1518,6 @@
         "name": {
           "name": "name",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rating": {
-          "name": "rating",
-          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -1604,15 +1535,29 @@
           "notNull": true,
           "default": 0
         },
-        "draws": {
-          "name": "draws",
+        "matches": {
+          "name": "matches",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "matches": {
-          "name": "matches",
+        "total_realms": {
+          "name": "total_realms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "total_steals": {
+          "name": "total_steals",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "total_tributes": {
+          "name": "total_tributes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1698,15 +1643,6 @@
         "fixed",
         "hourly",
         "monthly"
-      ]
-    },
-    "public.sirens_result": {
-      "name": "sirens_result",
-      "schema": "public",
-      "values": [
-        "win",
-        "loss",
-        "draw"
       ]
     },
     "public.tx_direction": {

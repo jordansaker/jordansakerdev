@@ -318,17 +318,14 @@ export type Document = typeof documents.$inferSelect;
 /* Siren's Bargain — public leaderboard fed by the GitHub Pages game  */
 /* ------------------------------------------------------------------ */
 
-export const sirensResult = pgEnum("sirens_result", ["win", "loss", "draw"]);
-
 export const sirensMatches = pgTable("sirens_matches", {
   id: serial().primaryKey(),
+  // Deterministic content hash of (endedAt + winner + sorted player names) so
+  // the same match POSTed twice is a no-op — the payload doesn't carry an id.
   matchId: text().notNull().unique(),
-  mode: text().notNull(),
-  roomCode: text(),
   endedAt: timestamp({ withTimezone: true }).notNull(),
-  durationSeconds: integer().notNull(),
   turns: integer().notNull(),
-  winnerPlayerId: text(),
+  winnerName: text().notNull(),
   ipHash: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
@@ -340,32 +337,28 @@ export const sirensMatchPlayers = pgTable(
     matchId: integer()
       .notNull()
       .references(() => sirensMatches.id, { onDelete: "cascade" }),
-    playerId: text().notNull(),
     name: text().notNull(),
-    result: sirensResult().notNull(),
-    turnOrder: integer().notNull(),
-    realmsCompleted: integer().notNull().default(0),
-    pearlsBanked: integer().notNull().default(0),
-    cardsStolen: integer().notNull().default(0),
-    tributesCharged: integer().notNull().default(0),
-    sirensRefusalsPlayed: integer().notNull().default(0),
-    ratingBefore: integer().notNull(),
-    ratingAfter: integer().notNull(),
-    ratingDelta: integer().notNull(),
+    won: boolean().notNull(),
+    realms: integer().notNull().default(0),
+    steals: integer().notNull().default(0),
+    tributes: integer().notNull().default(0),
   },
   (t) => [
-    uniqueIndex("sirens_match_players_match_player_unique").on(t.matchId, t.playerId),
+    uniqueIndex("sirens_match_players_match_name_unique").on(t.matchId, t.name),
   ],
 );
 
 export const sirensPlayers = pgTable("sirens_players", {
-  playerId: text().primaryKey(),
+  // Lower-cased name — identity is the handle; case-insensitive.
+  nameKey: text().primaryKey(),
+  // Display name (from the most recent match this player appeared in).
   name: text().notNull(),
-  rating: integer().notNull(),
   wins: integer().notNull().default(0),
   losses: integer().notNull().default(0),
-  draws: integer().notNull().default(0),
   matches: integer().notNull().default(0),
+  totalRealms: integer().notNull().default(0),
+  totalSteals: integer().notNull().default(0),
+  totalTributes: integer().notNull().default(0),
   lastMatchAt: timestamp({ withTimezone: true }).notNull(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

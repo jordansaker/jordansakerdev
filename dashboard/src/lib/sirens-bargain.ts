@@ -23,30 +23,26 @@ const TIMESTAMP_WINDOW_SEC = 5 * 60;
 const FUTURE_SKEW_SEC = 60;
 
 const playerSchema = z.object({
-  playerId: z.string().min(1).max(64),
-  name: z.string().min(1).max(60),
-  result: z.enum(["win", "loss", "draw"]),
-  turnOrder: z.number().int().min(1).max(16),
-  realmsCompleted: z.number().int().min(0).max(100).default(0),
-  pearlsBanked: z.number().int().min(0).max(10_000).default(0),
-  cardsStolen: z.number().int().min(0).max(10_000).default(0),
-  tributesCharged: z.number().int().min(0).max(10_000).default(0),
-  sirensRefusalsPlayed: z.number().int().min(0).max(10_000).default(0),
-  ratingBefore: z.number().int().min(0).max(10_000),
-  ratingAfter: z.number().int().min(0).max(10_000),
-  ratingDelta: z.number().int().min(-1000).max(1000),
+  name: z.string().trim().min(1).max(60),
+  realms: z.number().int().min(0).max(1000).default(0),
+  steals: z.number().int().min(0).max(1000).default(0),
+  tributes: z.number().int().min(0).max(1000).default(0),
 });
 
-export const matchPayloadSchema = z.object({
-  matchId: z.string().min(1).max(64),
-  mode: z.string().min(1).max(32),
-  roomCode: z.string().max(16).nullish(),
-  endedAt: z.string().datetime(),
-  durationSeconds: z.number().int().min(1).max(86_400),
-  turns: z.number().int().min(1).max(1000),
-  winnerId: z.string().max(64).nullish(),
-  players: z.array(playerSchema).min(1).max(8),
-});
+export const matchPayloadSchema = z
+  .object({
+    endedAt: z.string().datetime(),
+    turns: z.number().int().min(1).max(1000),
+    winner: z.string().trim().min(1).max(60),
+    players: z.array(playerSchema).min(1).max(8),
+  })
+  .refine(
+    (d) =>
+      d.players.some(
+        (p) => p.name.toLowerCase() === d.winner.toLowerCase(),
+      ),
+    { message: "winner must match one of the player names" },
+  );
 
 export type MatchPayload = z.infer<typeof matchPayloadSchema>;
 
@@ -127,23 +123,37 @@ export function clientIp(req: Request): string | null {
   return req.headers.get("x-real-ip");
 }
 
+/**
+ * Deterministic match id: sha256 over the fields that uniquely identify a
+ * match (endedAt + winner + sorted player names, all lower-cased). Same
+ * payload posted twice yields the same id, so the UNIQUE constraint on
+ * sirens_matches.match_id makes ingest idempotent.
+ */
+export function computeMatchId(payload: MatchPayload): string {
+  const names = payload.players
+    .map((p) => p.name.toLowerCase())
+    .sort()
+    .join("|");
+  const key = `${payload.endedAt}|${payload.winner.toLowerCase()}|${names}`;
+  return createHash("sha256").update(key).digest("hex").slice(0, 32);
+}
+
 type IngestResult =
   | { status: "created"; matchId: number }
   | { status: "duplicate"; matchId: number };
 
-/**
- * Insert a match + its players, and upsert the denormalised leaderboard row
- * for each player. Idempotent on matchId.
- */
 export async function ingestMatch(
   payload: MatchPayload,
   ipHash: string | null,
 ): Promise<IngestResult> {
+  const matchIdHash = computeMatchId(payload);
+  const winnerKey = payload.winner.toLowerCase();
+
   return await db.transaction(async (tx) => {
     const existing = await tx
       .select({ id: sirensMatches.id })
       .from(sirensMatches)
-      .where(eq(sirensMatches.matchId, payload.matchId))
+      .where(eq(sirensMatches.matchId, matchIdHash))
       .limit(1);
     if (existing[0]) {
       return { status: "duplicate", matchId: existing[0].id };
@@ -153,13 +163,10 @@ export async function ingestMatch(
     const [inserted] = await tx
       .insert(sirensMatches)
       .values({
-        matchId: payload.matchId,
-        mode: payload.mode,
-        roomCode: payload.roomCode ?? null,
+        matchId: matchIdHash,
         endedAt,
-        durationSeconds: payload.durationSeconds,
         turns: payload.turns,
-        winnerPlayerId: payload.winnerId ?? null,
+        winnerName: payload.winner,
         ipHash,
       })
       .returning({ id: sirensMatches.id });
@@ -168,50 +175,44 @@ export async function ingestMatch(
     await tx.insert(sirensMatchPlayers).values(
       payload.players.map((p) => ({
         matchId: matchRowId,
-        playerId: p.playerId,
         name: p.name,
-        result: p.result,
-        turnOrder: p.turnOrder,
-        realmsCompleted: p.realmsCompleted,
-        pearlsBanked: p.pearlsBanked,
-        cardsStolen: p.cardsStolen,
-        tributesCharged: p.tributesCharged,
-        sirensRefusalsPlayed: p.sirensRefusalsPlayed,
-        ratingBefore: p.ratingBefore,
-        ratingAfter: p.ratingAfter,
-        ratingDelta: p.ratingDelta,
+        won: p.name.toLowerCase() === winnerKey,
+        realms: p.realms,
+        steals: p.steals,
+        tributes: p.tributes,
       })),
     );
 
     for (const p of payload.players) {
-      const win = p.result === "win" ? 1 : 0;
-      const loss = p.result === "loss" ? 1 : 0;
-      const draw = p.result === "draw" ? 1 : 0;
+      const won = p.name.toLowerCase() === winnerKey;
+      const winInc = won ? 1 : 0;
+      const lossInc = won ? 0 : 1;
+      const nameKey = p.name.toLowerCase();
       await tx
         .insert(sirensPlayers)
         .values({
-          playerId: p.playerId,
+          nameKey,
           name: p.name,
-          rating: p.ratingAfter,
-          wins: win,
-          losses: loss,
-          draws: draw,
+          wins: winInc,
+          losses: lossInc,
           matches: 1,
+          totalRealms: p.realms,
+          totalSteals: p.steals,
+          totalTributes: p.tributes,
           lastMatchAt: endedAt,
         })
         .onConflictDoUpdate({
-          target: sirensPlayers.playerId,
+          target: sirensPlayers.nameKey,
           set: {
-            // Only accept the new rating if this match is newer than the last one
-            // we've seen for this player. Prevents out-of-order posts from
-            // clobbering the current rating.
-            rating: sql`CASE WHEN ${sirensPlayers.lastMatchAt} < ${endedAt} THEN ${p.ratingAfter} ELSE ${sirensPlayers.rating} END`,
+            // Preserve the latest casing of the display name.
             name: sql`CASE WHEN ${sirensPlayers.lastMatchAt} < ${endedAt} THEN ${p.name} ELSE ${sirensPlayers.name} END`,
             lastMatchAt: sql`GREATEST(${sirensPlayers.lastMatchAt}, ${endedAt})`,
-            wins: sql`${sirensPlayers.wins} + ${win}`,
-            losses: sql`${sirensPlayers.losses} + ${loss}`,
-            draws: sql`${sirensPlayers.draws} + ${draw}`,
+            wins: sql`${sirensPlayers.wins} + ${winInc}`,
+            losses: sql`${sirensPlayers.losses} + ${lossInc}`,
             matches: sql`${sirensPlayers.matches} + 1`,
+            totalRealms: sql`${sirensPlayers.totalRealms} + ${p.realms}`,
+            totalSteals: sql`${sirensPlayers.totalSteals} + ${p.steals}`,
+            totalTributes: sql`${sirensPlayers.totalTributes} + ${p.tributes}`,
             updatedAt: sql`now()`,
           },
         });
@@ -222,13 +223,14 @@ export async function ingestMatch(
 }
 
 export type LeaderboardEntry = {
-  playerId: string;
   name: string;
-  rating: number;
   wins: number;
   losses: number;
-  draws: number;
   matches: number;
+  winRate: number;
+  totalRealms: number;
+  totalSteals: number;
+  totalTributes: number;
   lastMatchAt: string;
 };
 
@@ -241,17 +243,21 @@ export async function readLeaderboard(
     .select()
     .from(sirensPlayers)
     .where(gte(sirensPlayers.matches, minMatches))
-    .orderBy(sql`${sirensPlayers.rating} DESC, ${sirensPlayers.lastMatchAt} DESC`)
+    .orderBy(
+      sql`${sirensPlayers.wins} DESC,
+          (${sirensPlayers.wins}::float / NULLIF(${sirensPlayers.matches}, 0)) DESC,
+          ${sirensPlayers.lastMatchAt} DESC`,
+    )
     .limit(limit);
   return rows.map((r) => ({
-    playerId: r.playerId,
     name: r.name,
-    rating: r.rating,
     wins: r.wins,
     losses: r.losses,
-    draws: r.draws,
     matches: r.matches,
+    winRate: r.matches > 0 ? r.wins / r.matches : 0,
+    totalRealms: r.totalRealms,
+    totalSteals: r.totalSteals,
+    totalTributes: r.totalTributes,
     lastMatchAt: r.lastMatchAt.toISOString(),
   }));
 }
-
