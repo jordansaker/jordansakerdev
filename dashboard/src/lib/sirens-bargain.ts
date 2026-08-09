@@ -269,28 +269,29 @@ export type LeaderboardResponse = {
 type StreakRow = { name_key: string; highest_win_streak: number; current_win_streak: number };
 
 async function readStreaks(): Promise<Map<string, { highest: number; current: number }>> {
+  // Order by m.id (monotonic serial = true insertion order). Ordering by
+  // ended_at is unsafe because it's client-supplied and can be out of order
+  // relative to when matches were actually played/posted.
   const rows = (await db.execute(sql`
     WITH ordered AS (
       SELECT
         LOWER(mp.name) AS name_key,
         mp.won,
-        m.ended_at,
         m.id AS match_id,
-        ROW_NUMBER() OVER (PARTITION BY LOWER(mp.name) ORDER BY m.ended_at, m.id) AS rn
+        ROW_NUMBER() OVER (PARTITION BY LOWER(mp.name) ORDER BY m.id) AS rn
       FROM sirens_match_players mp
       JOIN sirens_matches m ON m.id = mp.match_id
     ),
     grouped AS (
       SELECT
-        name_key, won, ended_at, match_id, rn,
-        rn - ROW_NUMBER() OVER (PARTITION BY name_key, won ORDER BY ended_at, match_id) AS grp
+        name_key, won, match_id, rn,
+        rn - ROW_NUMBER() OVER (PARTITION BY name_key, won ORDER BY match_id) AS grp
       FROM ordered
     ),
     runs AS (
       SELECT
         name_key, won, grp,
         COUNT(*)::int AS run_length,
-        MAX(ended_at) AS run_end,
         MAX(match_id) AS last_match_id
       FROM grouped
       GROUP BY name_key, won, grp
@@ -300,7 +301,7 @@ async function readStreaks(): Promise<Map<string, { highest: number; current: nu
         name_key,
         (CASE WHEN won THEN run_length ELSE 0 END)::int AS current_win_streak
       FROM runs
-      ORDER BY name_key, run_end DESC, last_match_id DESC
+      ORDER BY name_key, last_match_id DESC
     ),
     highest_run AS (
       SELECT
