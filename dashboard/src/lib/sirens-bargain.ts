@@ -185,6 +185,10 @@ export async function ingestMatch(
       })),
     );
 
+    // Drizzle's .values() serialises Date columns for us, but Date values
+    // interpolated into a raw sql`` fragment pass through unchanged and
+    // postgres.js rejects them with ERR_INVALID_ARG_TYPE. Pre-convert.
+    const endedAtIso = endedAt.toISOString();
     for (const p of payload.players) {
       const won = p.name.toLowerCase() === winnerKey;
       const winInc = won ? 1 : 0;
@@ -208,8 +212,8 @@ export async function ingestMatch(
           target: sirensPlayers.nameKey,
           set: {
             // Preserve the latest casing of the display name.
-            name: sql`CASE WHEN ${sirensPlayers.lastMatchAt} < ${endedAt} THEN ${p.name} ELSE ${sirensPlayers.name} END`,
-            lastMatchAt: sql`GREATEST(${sirensPlayers.lastMatchAt}, ${endedAt})`,
+            name: sql`CASE WHEN ${sirensPlayers.lastMatchAt} < ${endedAtIso}::timestamptz THEN ${p.name} ELSE ${sirensPlayers.name} END`,
+            lastMatchAt: sql`GREATEST(${sirensPlayers.lastMatchAt}, ${endedAtIso}::timestamptz)`,
             wins: sql`${sirensPlayers.wins} + ${winInc}`,
             losses: sql`${sirensPlayers.losses} + ${lossInc}`,
             matches: sql`${sirensPlayers.matches} + 1`,
