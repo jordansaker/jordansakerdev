@@ -250,8 +250,76 @@ export type LeaderboardEntry = {
   totalTributes: number;
   highestRent: number;
   leastAmountMoves: number;
+  highestStreak: number;   // longest consecutive-win run ever
+  currentStreak: number;   // wins in a row ending at their most recent match (0 if last was a loss)
   lastMatchAt: string;
 };
+
+export type LeaderboardResponse = {
+  entries: LeaderboardEntry[];
+  currentStreakLeader: { name: string; streak: number } | null;
+};
+
+/**
+ * Derive per-player streaks from sirens_match_players. Consecutive-win runs
+ * are found via the "gaps and islands" trick — row_number ordered by
+ * chronology minus row_number partitioned by (player, won) tags every
+ * consecutive run with a stable group id.
+ */
+type StreakRow = { name_key: string; highest_win_streak: number; current_win_streak: number };
+
+async function readStreaks(): Promise<Map<string, { highest: number; current: number }>> {
+  const rows = (await db.execute(sql`
+    WITH ordered AS (
+      SELECT
+        LOWER(mp.name) AS name_key,
+        mp.won,
+        m.ended_at,
+        m.id AS match_id,
+        ROW_NUMBER() OVER (PARTITION BY LOWER(mp.name) ORDER BY m.ended_at, m.id) AS rn
+      FROM sirens_match_players mp
+      JOIN sirens_matches m ON m.id = mp.match_id
+    ),
+    grouped AS (
+      SELECT
+        name_key, won, ended_at, match_id, rn,
+        rn - ROW_NUMBER() OVER (PARTITION BY name_key, won ORDER BY ended_at, match_id) AS grp
+      FROM ordered
+    ),
+    runs AS (
+      SELECT
+        name_key, won, grp,
+        COUNT(*)::int AS run_length,
+        MAX(ended_at) AS run_end,
+        MAX(match_id) AS last_match_id
+      FROM grouped
+      GROUP BY name_key, won, grp
+    ),
+    latest_run AS (
+      SELECT DISTINCT ON (name_key)
+        name_key,
+        (CASE WHEN won THEN run_length ELSE 0 END)::int AS current_win_streak
+      FROM runs
+      ORDER BY name_key, run_end DESC, last_match_id DESC
+    ),
+    highest_run AS (
+      SELECT
+        name_key,
+        COALESCE(MAX(CASE WHEN won THEN run_length END), 0)::int AS highest_win_streak
+      FROM runs
+      GROUP BY name_key
+    )
+    SELECT h.name_key, h.highest_win_streak, COALESCE(l.current_win_streak, 0)::int AS current_win_streak
+    FROM highest_run h
+    LEFT JOIN latest_run l USING (name_key)
+  `)) as unknown as StreakRow[];
+
+  const map = new Map<string, { highest: number; current: number }>();
+  for (const r of rows) {
+    map.set(r.name_key, { highest: r.highest_win_streak, current: r.current_win_streak });
+  }
+  return map;
+}
 
 export type MatchListEntry = {
   endedAt: string;
@@ -326,30 +394,56 @@ export async function readMatches(
 
 export async function readLeaderboard(
   opts: { limit?: number; minMatches?: number } = {},
-): Promise<LeaderboardEntry[]> {
+): Promise<LeaderboardResponse> {
   const limit = Math.min(Math.max(opts.limit ?? 25, 1), 100);
   const minMatches = Math.max(opts.minMatches ?? 1, 1);
-  const rows = await db
-    .select()
-    .from(sirensPlayers)
-    .where(gte(sirensPlayers.matches, minMatches))
-    .orderBy(
-      sql`${sirensPlayers.wins} DESC,
-          (${sirensPlayers.wins}::float / NULLIF(${sirensPlayers.matches}, 0)) DESC,
-          ${sirensPlayers.lastMatchAt} DESC`,
-    )
-    .limit(limit);
-  return rows.map((r) => ({
-    name: r.name,
-    wins: r.wins,
-    losses: r.losses,
-    matches: r.matches,
-    winRate: r.matches > 0 ? r.wins / r.matches : 0,
-    totalRealms: r.totalRealms,
-    totalSteals: r.totalSteals,
-    totalTributes: r.totalTributes,
-    highestRent: r.highestRent,
-    leastAmountMoves: r.leastAmountMoves,
-    lastMatchAt: r.lastMatchAt.toISOString(),
-  }));
+
+  const [rows, streaks] = await Promise.all([
+    db
+      .select()
+      .from(sirensPlayers)
+      .where(gte(sirensPlayers.matches, minMatches))
+      .orderBy(
+        sql`${sirensPlayers.wins} DESC,
+            (${sirensPlayers.wins}::float / NULLIF(${sirensPlayers.matches}, 0)) DESC,
+            ${sirensPlayers.lastMatchAt} DESC`,
+      )
+      .limit(limit),
+    readStreaks(),
+  ]);
+
+  const entries: LeaderboardEntry[] = rows.map((r) => {
+    const s = streaks.get(r.nameKey) ?? { highest: 0, current: 0 };
+    return {
+      name: r.name,
+      wins: r.wins,
+      losses: r.losses,
+      matches: r.matches,
+      winRate: r.matches > 0 ? r.wins / r.matches : 0,
+      totalRealms: r.totalRealms,
+      totalSteals: r.totalSteals,
+      totalTributes: r.totalTributes,
+      highestRent: r.highestRent,
+      leastAmountMoves: r.leastAmountMoves,
+      highestStreak: s.highest,
+      currentStreak: s.current,
+      lastMatchAt: r.lastMatchAt.toISOString(),
+    };
+  });
+
+  // Leader on active streak: longest currentStreak > 0, tiebreak by wins.
+  let leader: LeaderboardResponse["currentStreakLeader"] = null;
+  for (const e of entries) {
+    if (e.currentStreak <= 0) continue;
+    if (
+      !leader ||
+      e.currentStreak > leader.streak ||
+      (e.currentStreak === leader.streak &&
+        e.wins > (entries.find((x) => x.name === leader?.name)?.wins ?? 0))
+    ) {
+      leader = { name: e.name, streak: e.currentStreak };
+    }
+  }
+
+  return { entries, currentStreakLeader: leader };
 }

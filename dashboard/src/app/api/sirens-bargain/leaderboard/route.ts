@@ -13,9 +13,9 @@ export async function GET(req: Request) {
   const minMatches = Number.parseInt(url.searchParams.get("minMatches") ?? "1", 10);
 
   try {
-    const entries = await readLeaderboard({ limit, minMatches });
+    const { entries, currentStreakLeader } = await readLeaderboard({ limit, minMatches });
     return jsonResponse(
-      { ok: true, entries },
+      { ok: true, entries, currentStreakLeader },
       {
         extraHeaders: {
           "cache-control": "public, s-maxage=30, stale-while-revalidate=60",
