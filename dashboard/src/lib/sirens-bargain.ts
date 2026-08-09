@@ -28,6 +28,7 @@ const playerSchema = z.object({
   steals: z.number().int().min(0).max(1000).default(0),
   tributes: z.number().int().min(0).max(1000).default(0),
   highestRent: z.number().int().min(0).max(100_000).default(0),
+  leastAmountMoves: z.number().int().min(0).max(100_000).default(0),
 });
 
 export const matchPayloadSchema = z
@@ -182,6 +183,7 @@ export async function ingestMatch(
         steals: p.steals,
         tributes: p.tributes,
         highestRent: p.highestRent,
+        leastAmountMoves: p.leastAmountMoves,
       })),
     );
 
@@ -206,6 +208,7 @@ export async function ingestMatch(
           totalSteals: p.steals,
           totalTributes: p.tributes,
           highestRent: p.highestRent,
+          leastAmountMoves: p.leastAmountMoves,
           lastMatchAt: endedAt,
         })
         .onConflictDoUpdate({
@@ -221,6 +224,12 @@ export async function ingestMatch(
             totalSteals: sql`${sirensPlayers.totalSteals} + ${p.steals}`,
             totalTributes: sql`${sirensPlayers.totalTributes} + ${p.tributes}`,
             highestRent: sql`GREATEST(${sirensPlayers.highestRent}, ${p.highestRent})`,
+            // 0 means "no data" — ignore it; otherwise take the min.
+            leastAmountMoves: sql`CASE
+              WHEN ${p.leastAmountMoves} = 0 THEN ${sirensPlayers.leastAmountMoves}
+              WHEN ${sirensPlayers.leastAmountMoves} = 0 THEN ${p.leastAmountMoves}
+              ELSE LEAST(${sirensPlayers.leastAmountMoves}, ${p.leastAmountMoves})
+            END`,
             updatedAt: sql`now()`,
           },
         });
@@ -240,6 +249,7 @@ export type LeaderboardEntry = {
   totalSteals: number;
   totalTributes: number;
   highestRent: number;
+  leastAmountMoves: number;
   lastMatchAt: string;
 };
 
@@ -253,6 +263,7 @@ export type MatchListEntry = {
     steals: number;
     tributes: number;
     highestRent: number;
+    leastAmountMoves: number;
   }[];
 };
 
@@ -286,6 +297,7 @@ export async function readMatches(
       steals: sirensMatchPlayers.steals,
       tributes: sirensMatchPlayers.tributes,
       highestRent: sirensMatchPlayers.highestRent,
+      leastAmountMoves: sirensMatchPlayers.leastAmountMoves,
     })
     .from(sirensMatchPlayers)
     .where(sql`${sirensMatchPlayers.matchId} IN ${ids}`);
@@ -299,6 +311,7 @@ export async function readMatches(
       steals: p.steals,
       tributes: p.tributes,
       highestRent: p.highestRent,
+      leastAmountMoves: p.leastAmountMoves,
     });
     byMatch.set(p.matchId, arr);
   }
@@ -336,6 +349,7 @@ export async function readLeaderboard(
     totalSteals: r.totalSteals,
     totalTributes: r.totalTributes,
     highestRent: r.highestRent,
+    leastAmountMoves: r.leastAmountMoves,
     lastMatchAt: r.lastMatchAt.toISOString(),
   }));
 }

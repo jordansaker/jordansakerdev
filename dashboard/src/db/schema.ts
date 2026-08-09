@@ -343,6 +343,7 @@ export const sirensMatchPlayers = pgTable(
     steals: integer().notNull().default(0),
     tributes: integer().notNull().default(0),
     highestRent: integer().notNull().default(0),
+    leastAmountMoves: integer().notNull().default(0),
   },
   (t) => [
     uniqueIndex("sirens_match_players_match_name_unique").on(t.matchId, t.name),
@@ -361,6 +362,9 @@ export const sirensPlayers = pgTable("sirens_players", {
   totalSteals: integer().notNull().default(0),
   totalTributes: integer().notNull().default(0),
   highestRent: integer().notNull().default(0),
+  // All-time minimum. 0 means "not yet recorded" (any 0-valued incoming match
+  // is ignored so it doesn't lock the aggregate at 0 forever).
+  leastAmountMoves: integer().notNull().default(0),
   lastMatchAt: timestamp({ withTimezone: true }).notNull(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
