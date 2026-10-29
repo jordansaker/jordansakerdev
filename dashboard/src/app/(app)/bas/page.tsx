@@ -14,6 +14,7 @@ import { createExpenseAction, deleteExpenseAction } from "./actions";
 import { PendingStatements } from "./pending-statements";
 import { uploadStatementAction } from "./upload-action";
 import { StatementUploadForm } from "./upload-form";
+import { FyPicker } from "./fy-picker";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "BAS · Studio" };
@@ -43,7 +44,7 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
         }
       />
 
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap items-center gap-2 mb-5">
         {QUARTER_LABELS.map((label, i) => (
           <Link
             key={i}
@@ -57,6 +58,7 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
             {label}
           </Link>
         ))}
+        <FyPicker q={q} fy={fy} minFy={defaultFy - 20} maxFy={defaultFy} />
       </div>
 
       <div className="bg-gradient-to-br from-accent-soft to-transparent border border-accent-soft rounded-2xl p-6 mb-5 flex flex-wrap justify-between items-center gap-4">
