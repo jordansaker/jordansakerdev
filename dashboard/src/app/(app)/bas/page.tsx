@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Empty, PageHead, Panel, Stat, Td, Th } from "@/components/ui";
 import { formatCents, formatCents0 } from "@/lib/money";
-import { quarterFinancials } from "@/lib/queries";
+import { fyExpenseTotalCents, quarterFinancials } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import {
   QUARTER_DUE,
@@ -31,7 +31,10 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
     ? (Math.min(3, Math.max(0, Number(sp.q))) as 0 | 1 | 2 | 3)
     : defaultQ;
   const fy = sp.fy && /^\d{4}$/.test(sp.fy) ? Number(sp.fy) : defaultFy;
-  const data = await quarterFinancials(q, fy);
+  const [data, fyExpenses] = await Promise.all([
+    quarterFinancials(q, fy),
+    fyExpenseTotalCents(fy),
+  ]);
 
   return (
     <>
@@ -96,6 +99,24 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
           label="G1 · Total sales"
           value={formatCents0(data.salesCents + data.gstCollectedCents)}
           sub="GST-inclusive"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <Stat
+          label={`FY ${fy} · Total expenses`}
+          value={formatCents0(fyExpenses.totalCents)}
+          sub={`${fyExpenses.count} ${fyExpenses.count === 1 ? "expense" : "expenses"} · GST-inclusive`}
+        />
+        <Stat
+          label={`FY ${fy} · GST on purchases`}
+          value={formatCents0(fyExpenses.gstCents)}
+          sub="across all quarters"
+        />
+        <Stat
+          label={`FY ${fy} · Ex-GST spend`}
+          value={formatCents0(fyExpenses.totalCents - fyExpenses.gstCents)}
+          sub="deductible base"
         />
       </div>
 
