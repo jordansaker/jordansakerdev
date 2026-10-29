@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Empty, PageHead, Panel, Stat, Td, Th } from "@/components/ui";
 import { formatCents, formatCents0 } from "@/lib/money";
-import { fyExpenseTotalCents, quarterFinancials } from "@/lib/queries";
+import { fyExpenses, quarterFinancials } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import {
   QUARTER_DUE,
@@ -31,9 +31,9 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
     ? (Math.min(3, Math.max(0, Number(sp.q))) as 0 | 1 | 2 | 3)
     : defaultQ;
   const fy = sp.fy && /^\d{4}$/.test(sp.fy) ? Number(sp.fy) : defaultFy;
-  const [data, fyExpenses] = await Promise.all([
+  const [data, fyExp] = await Promise.all([
     quarterFinancials(q, fy),
-    fyExpenseTotalCents(fy),
+    fyExpenses(fy),
   ]);
 
   return (
@@ -105,17 +105,17 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <Stat
           label={`FY ${fy} · Total expenses`}
-          value={formatCents0(fyExpenses.totalCents)}
-          sub={`${fyExpenses.count} ${fyExpenses.count === 1 ? "expense" : "expenses"} · GST-inclusive`}
+          value={formatCents0(fyExp.totalCents)}
+          sub={`${fyExp.count} ${fyExp.count === 1 ? "expense" : "expenses"} · GST-inclusive`}
         />
         <Stat
           label={`FY ${fy} · GST on purchases`}
-          value={formatCents0(fyExpenses.gstCents)}
+          value={formatCents0(fyExp.gstCents)}
           sub="across all quarters"
         />
         <Stat
           label={`FY ${fy} · Ex-GST spend`}
-          value={formatCents0(fyExpenses.totalCents - fyExpenses.gstCents)}
+          value={formatCents0(fyExp.totalCents - fyExp.gstCents)}
           sub="deductible base"
         />
       </div>
@@ -177,6 +177,51 @@ export default async function BasPage({ searchParams }: { searchParams: SP }) {
                 </thead>
                 <tbody>
                   {data.expenses.map((e) => (
+                    <tr key={e.id} className="hover:bg-surface-2 transition-colors">
+                      <Td>{e.description}</Td>
+                      <Td className="mono text-muted whitespace-nowrap">{e.spentOn}</Td>
+                      <Td className="mono text-right whitespace-nowrap">{formatCents(e.amountCents)}</Td>
+                      <Td className="mono text-right text-accent-2 whitespace-nowrap">
+                        {e.hasGst ? formatCents(Math.round(e.amountCents * 0.1)) : "—"}
+                      </Td>
+                      <Td className="text-right">
+                        <form action={deleteExpenseAction} className="inline">
+                          <input type="hidden" name="id" value={e.id} />
+                          <button type="submit" className="text-[0.78rem] text-muted-2 hover:text-red">
+                            Delete
+                          </button>
+                        </form>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-5">
+        <Panel
+          title={`Expenses · FY ${fy}`}
+          meta={`${fyExp.count} ${fyExp.count === 1 ? "expense" : "expenses"} · ${formatCents0(fyExp.totalCents)} ex GST · ${formatCents0(fyExp.gstCents)} GST`}
+        >
+          {fyExp.rows.length === 0 ? (
+            <Empty>No expenses in FY {fy}</Empty>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr>
+                    <Th>Expense</Th>
+                    <Th>Date</Th>
+                    <Th className="text-right">Amount (ex GST)</Th>
+                    <Th className="text-right">GST</Th>
+                    <Th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {fyExp.rows.map((e) => (
                     <tr key={e.id} className="hover:bg-surface-2 transition-colors">
                       <Td>{e.description}</Td>
                       <Td className="mono text-muted whitespace-nowrap">{e.spentOn}</Td>

@@ -228,16 +228,17 @@ export async function quarterFinancials(q: 0 | 1 | 2 | 3, fy: number) {
   };
 }
 
-export async function fyExpenseTotalCents(fy: number) {
+export async function fyExpenses(fy: number) {
   const start = quarterRange(0, fy).start;
   const end = quarterRange(3, fy).end;
   const rows = await db
-    .select({ amountCents: expenses.amountCents, hasGst: expenses.hasGst })
+    .select()
     .from(expenses)
-    .where(and(gte(expenses.spentOn, start), lt(expenses.spentOn, end)));
+    .where(and(gte(expenses.spentOn, start), lt(expenses.spentOn, end)))
+    .orderBy(desc(expenses.spentOn), desc(expenses.id));
   const totalCents = rows.reduce((s, e) => s + e.amountCents, 0);
   const gstCents = rows.reduce((s, e) => (e.hasGst ? s + Math.round(e.amountCents * 0.1) : s), 0);
-  return { totalCents, gstCents, count: rows.length };
+  return { rows, totalCents, gstCents, count: rows.length };
 }
 
 export async function overviewStats() {

@@ -32,12 +32,14 @@ export function ReviewTable({
       rows.map((r) => [
         r.id,
         {
-          // Default: select all debits, select credits only when a match was found
+          // Default: select all debits + matched credits, UNLESS the upload
+          // flagged this row as a duplicate of a previously-imported statement.
           selected:
-            r.direction === "debit" || r.matchedInvoiceId !== null,
+            r.status !== "ignored" &&
+            (r.direction === "debit" || r.matchedInvoiceId !== null),
           description: r.description,
           hasGst: r.hasGstGuess,
-          confirmMatch: r.matchedInvoiceId !== null,
+          confirmMatch: r.status !== "ignored" && r.matchedInvoiceId !== null,
         },
       ]),
     ),
@@ -121,6 +123,7 @@ export function ReviewTable({
               <tbody>
                 {rows.map((r) => {
                   const s = state[r.id];
+                  const isDup = r.status === "ignored";
                   return (
                     <tr key={r.id} className="hover:bg-surface-2 transition-colors">
                       <Td>
@@ -133,13 +136,23 @@ export function ReviewTable({
                       </Td>
                       <Td className="mono text-muted whitespace-nowrap">{r.txDate}</Td>
                       <Td>
-                        <input
-                          type="text"
-                          value={s.description}
-                          onChange={(e) => patch(r.id, { description: e.target.value })}
-                          disabled={!s.selected}
-                          className="w-full bg-bg-2 border border-line-soft rounded px-2 py-1 text-[0.88rem] focus:outline-none focus:border-accent disabled:opacity-50"
-                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={s.description}
+                            onChange={(e) => patch(r.id, { description: e.target.value })}
+                            disabled={!s.selected}
+                            className="w-full bg-bg-2 border border-line-soft rounded px-2 py-1 text-[0.88rem] focus:outline-none focus:border-accent disabled:opacity-50"
+                          />
+                          {isDup ? (
+                            <span
+                              title="Already imported in a previous statement"
+                              className="mono text-[0.66rem] tracking-[0.12em] uppercase text-muted-2 border border-line-soft rounded-full px-2 py-0.5 whitespace-nowrap"
+                            >
+                              Duplicate
+                            </span>
+                          ) : null}
+                        </div>
                       </Td>
                       <Td
                         className={`mono text-right whitespace-nowrap font-medium ${
