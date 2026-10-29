@@ -2,3 +2,5 @@
 *.dmg
 Business/
 goalquest/
+.vercel
+.env*
